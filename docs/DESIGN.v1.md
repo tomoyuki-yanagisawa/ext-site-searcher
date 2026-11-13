@@ -63,6 +63,7 @@ React や Content Script は使わず、必要な共通処理は小さなユー�
 
 - 追加・編集・削除・保存のみ。並び替えや有効/無効は作らない。
 - 検索結果の開き方をラジオボタンで選択できる。初期値は「新しいタブ（現在のタブの右隣）」。
+- 検索語のクリップボードへのコピーを設定できる。初期値はオフで、オンの場合は既存の内容を上書きする。
 - 設定画面は埋め込みダイアログではなく、ブラウザのタブで開く（`options_ui.open_in_tab`）。
 - 入力中は保存せず、「保存」でまとめて永続化する。設定の読み込み完了までは操作できない。
 - 保存結果または入力エラーを画面に表示する。
@@ -87,20 +88,22 @@ React や Content Script は使わず、必要な共通処理は小さなユー�
 
 ## 4. データ
 
-`browser.storage.local` に `sites` と `openIn` を保存する。
+`browser.storage.local` に `sites`、`openIn`、`copyQuery` を保存する。
 
 ```json
 {
   "sites": [
     { "name": "Google", "url": "https://www.google.com/search?q={query}" }
   ],
-  "openIn": "newTab"
+  "openIn": "newTab",
+  "copyQuery": false
 }
 ```
 
 - `sites` が未設定の場合は `[]` として扱う。
 - `openIn` が未設定の場合は `"newTab"` として扱う。
 - `openIn` は `"newTab"`（現在のタブの右隣）または `"currentTab"`（現在のタブ）を取る。
+- `copyQuery` は検索語のコピーを有効にする真偽値。未設定や不正な値は `false` として扱う。
 - メニューIDには配列のインデックスとサイトの名前・URLを含める。クリック時に最新の設定と照合し、設定変更前の項目が別のサイトを指さないようにする。
 - 親メニューは `site-search`、設定項目は `site-search-options`、区切り線は `site-search-separator` とする。
 - 同期やサーバーへの送信は行わない（検索時の検索語は検索先サイトに渡される）。
@@ -155,6 +158,7 @@ React や Content Script は使わず、必要な共通処理は小さなユー�
 3. Optionsで保存すると `storage.onChanged` が発火し、メニューを再構築する。複数の再構築処理は直列化する。
 4. サイトのメニューをクリックすると、`contextMenus.onClicked` で `selectionText` とメニューIDを取得する。
 5. 最新の `sites` から対象URLを取得し、`{query}` をURLエンコード済みの選択文字列で置換する。
+   `copyQuery` が有効な場合は、エンコード前の選択文字列をクリップボードに書き込む。書き込みが失敗しても検索を続ける。
 6. `openIn` が `"currentTab"` なら `browser.tabs.update()`、`"newTab"` なら `browser.tabs.create({ index: 現在のタブ + 1 })` で検索結果を開く。
 7. 設定項目のクリックでは `browser.runtime.openOptionsPage()` を使う。
 
@@ -164,7 +168,7 @@ WXTの `browser` APIを使い、Chrome・Firefox固有の分岐は書かない�
 
 ### `wxt.config.ts`
 
-現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
+現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。クリップボードへの書き込みに `clipboardWrite` を使い、読み取り権限は要求しない。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Chrome では Service Worker からの書き込みに対応した 157 以上を対象とする。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
 
 ### `package.json`
 
