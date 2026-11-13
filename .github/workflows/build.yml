@@ -45,20 +45,25 @@ jobs:
           WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         run: npm run sign:firefox
 
+      - name: Rename signed xpi
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version=$(node -p "require('./package.json').version")
+          xpi=$(find dist/amo -maxdepth 1 -name '*.xpi' -print -quit)
+          mv "$xpi" "dist/site-search-${version}-firefox-signed.xpi"
+
       - name: Upload Chrome artifact
         uses: actions/upload-artifact@v7
         with:
           name: site-search-chrome
-          path: site-search/.output/*chrome*.zip
-          include-hidden-files: true
+          path: site-search/dist/*chrome*.zip
           if-no-files-found: error
 
       - name: Upload Firefox artifact
         uses: actions/upload-artifact@v7
         with:
           name: site-search-firefox
-          path: site-search/.output/*firefox*.zip
-          include-hidden-files: true
+          path: site-search/dist/*firefox*.zip
           if-no-files-found: error
 
       - name: Upload signed Firefox artifact
@@ -66,7 +71,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: site-search-firefox-signed
-          path: site-search/web-ext-artifacts/*.xpi
+          path: site-search/dist/*-firefox-signed.xpi
           if-no-files-found: error
 
       - name: Attach files to release
@@ -74,6 +79,6 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            site-search/.output/*chrome*.zip
-            site-search/.output/*firefox*.zip
-            site-search/web-ext-artifacts/*.xpi
+            site-search/dist/*chrome*.zip
+            site-search/dist/*firefox*.zip
+            site-search/dist/*-firefox-signed.xpi
