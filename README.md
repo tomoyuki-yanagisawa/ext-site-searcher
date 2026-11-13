@@ -24,7 +24,7 @@ Webページ上で選択した文字列を、右クリックメニューから�
 2. Artifacts の `site-search-chrome` または `site-search-firefox` をダウンロードする
 3. Chrome は zip を展開して使う。Firefox は zip のまま読み込める
 
-`v*` タグを push すると [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) にも zip が添付されます。
+`v*` タグを push すると [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) にも zip が添付されます。署名用のシークレットを設定していれば、AMO で署名済みの Firefox 用 `.xpi` も添付されます（後述）。
 
 ### 自分でビルドする
 
@@ -72,6 +72,52 @@ Firefox ESR では署名チェックを無効にできます。
 
 AMO（addons.mozilla.org）で署名した xpi を使う場合、署名チェックを無効にする必要はありません。
 
+## リリースと署名（GitHub Actions）
+
+`main` への push と PR では、Chrome / Firefox の zip をビルドして Artifacts に保存します。`v*` タグを push すると、AMO の署名 API で Firefox 用 XPI を署名し、zip と一緒に Release に添付します。
+
+### シークレットの登録
+
+リポジトリの Settings → Secrets and variables → Actions → New repository secret で次を登録します。
+
+| 名前 | 値 |
+|---|---|
+| `AMO_JWT_ISSUER` | AMO の JWT issuer（`user:12345:678` 形式） |
+| `AMO_JWT_SECRET` | AMO の JWT secret |
+
+CLI の場合は次のとおりです（実行すると値の入力プロンプトが出ます）。
+
+```sh
+gh secret set AMO_JWT_ISSUER
+gh secret set AMO_JWT_SECRET
+```
+
+シークレットは保存後に値を表示できません。fork からの PR には渡りません。
+
+### リリース手順
+
+1. `site-search/package.json` の `version` を上げる
+2. `main` にマージする
+3. タグを push する
+
+```sh
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+`main` への push ではビルドのみ行います。AMO は同じバージョンを再署名できないため、署名はタグを切ったときだけ実行します。
+
+### 手元で署名する
+
+```sh
+cd site-search
+export WEB_EXT_API_KEY='user:12345:678'
+export WEB_EXT_API_SECRET='...'
+npm run sign:firefox
+```
+
+署名済み `.xpi` は `site-search/web-ext-artifacts/` に出力されます。
+
 ## 使い方
 
 1. Webページ上で文字列を選択して右クリックする
@@ -97,10 +143,11 @@ npm run dev -- -b firefox    # Firefox で起動
 npm run typecheck            # TypeScript の型検査
 npm run zip                  # Chrome 用 zip を作成
 npm run zip:firefox          # Firefox 用 zip を作成
+npm run sign:firefox         # AMO で署名（要 API キー）
 ```
 
 `npm install` 時に `wxt prepare` が実行され、型検査に必要な `.wxt/` の型定義が生成されます。
 
 アイコンは `site-search/assets/icon.svg` をもとにビルド時に PNG が生成されます（Chrome は manifest のアイコンに SVG を使えないため）。リポジトリには SVG のみをコミットします。
 
-`.output/` と `.wxt/` はビルド生成物のためコミットしません。
+`.output/`、`.wxt/`、`web-ext-artifacts/` はビルド生成物のためコミットしません。
