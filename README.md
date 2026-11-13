@@ -128,6 +128,8 @@ git commit -m "chore: release 0.1.2"
 
 `package.json` の version がすでにリリース済みの場合、ビルドと Artifacts のみ行われ、署名と Release はスキップされます。AMO は同じバージョンを再署名できないため、修正版は必ずバージョンを上げてください。
 
+`main` の CI は同時に実行せず、最大100件まで待機します。待機上限を超えた run はキャンセルされ、GitHub Actions は実行順も保証しないため、連続してリリースする場合は各 run の結果と対象コミットを確認してください。
+
 手動でタグを push する必要はありません。`workflow_dispatch` はビルド確認用で、Release は作成しません。
 
 ここで作成される XPI は AMO の **unlisted（非公開）署名**です。AMO での一般公開や Chrome Web Store への公開は別途手続きが必要です。
