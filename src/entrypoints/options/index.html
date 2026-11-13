@@ -16,6 +16,18 @@
     <main>
       <form id="site-form" novalidate>
         <fieldset>
+          <legend>検索結果の開き方</legend>
+          <label>
+            <input type="radio" name="openIn" value="newTab" checked />
+            新しいタブ（現在のタブの右隣）
+          </label>
+          <label>
+            <input type="radio" name="openIn" value="currentTab" />
+            現在のタブ
+          </label>
+        </fieldset>
+
+        <fieldset>
           <legend>検索サイト</legend>
           <p><code>{query}</code> は選択した文字列に置き換わります。</p>
 

@@ -35,7 +35,7 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 ```
 
 - サイトの項目はユーザーが登録した検索先から生成する（上記は例）。
-- 検索サイトを選ぶと、選択文字列を検索URLに埋め込んで新しいタブで開く。
+- 検索サイトを選ぶと、選択文字列を検索URLに埋め込み、設定した開き方（現在のタブ / 右隣の新しいタブ）で開く。
 - 検索サイトが0件でも「検索サイトを設定…」は表示する。
 - 初期設定は空。設定画面から検索先を登録する。
 - 「検索サイトを設定…」でOptions画面を開く。
@@ -47,6 +47,10 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 ```text
 検索サイトの設定
 
+検索結果の開き方
+(•) 新しいタブ（現在のタブの右隣）
+( ) 現在のタブ
+
 名前       検索URL
 [Google]   [https://www.google.com/search?q={query}] [削除]
 
@@ -56,6 +60,7 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 ```
 
 - 追加・編集・削除・保存のみ。並び替えや有効/無効は作らない。
+- 検索結果の開き方をラジオボタンで選択できる。初期値は「新しいタブ（現在のタブの右隣）」。
 - 設定画面は埋め込みダイアログではなく、ブラウザのタブで開く（`options_ui.open_in_tab`）。
 - 入力中は保存せず、「保存」でまとめて永続化する。
 - 保存結果または入力エラーを画面に表示する。
@@ -80,17 +85,20 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 
 ## 4. データ
 
-`browser.storage.local` に `sites` という配列を1つ保存する。
+`browser.storage.local` に `sites` と `openIn` を保存する。
 
 ```json
 {
   "sites": [
     { "name": "Google", "url": "https://www.google.com/search?q={query}" }
-  ]
+  ],
+  "openIn": "newTab"
 }
 ```
 
-- 未設定の場合は `[]` として扱う。
+- `sites` が未設定の場合は `[]` として扱う。
+- `openIn` が未設定の場合は `"newTab"` として扱う。
+- `openIn` は `"newTab"`（現在のタブの右隣）または `"currentTab"`（現在のタブ）を取る。
 - メニューIDは `site-index-0`、`site-index-1` のように配列のインデックスを使用する。
 - 親メニューは `site-search`、設定項目は `site-search-options`、区切り線は `site-search-separator` とする。
 - 同期やサーバーへの送信は行わない（検索時の検索語は検索先サイトに渡される）。
@@ -133,7 +141,7 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 3. Optionsで保存すると `storage.onChanged` が発火し、メニューを再構築する。複数の再構築処理は直列化する。
 4. サイトのメニューをクリックすると、`contextMenus.onClicked` で `selectionText` とメニューIDを取得する。
 5. 最新の `sites` から対象URLを取得し、`{query}` をURLエンコード済みの選択文字列で置換する。
-6. `browser.tabs.create({ url })` で検索結果を開く。
+6. `openIn` が `"currentTab"` なら `browser.tabs.update()`、`"newTab"` なら `browser.tabs.create({ index: 現在のタブ + 1 })` で検索結果を開く。
 7. 設定項目のクリックでは `browser.runtime.openOptionsPage()` を使う。
 
 WXTの `browser` APIを使い、Chrome・Firefox固有の分岐は書かない。FirefoxのMV3バックグラウンド形式の違いはWXTに任せる。
