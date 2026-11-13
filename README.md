@@ -14,6 +14,24 @@ Webページ上で選択した文字列を、右クリックメニューから�
 
 > Windows 7 で使える Firefox は 115 ESR が最後です。115 ESR はサポートが終了しており、セキュリティ更新は提供されません。Windows 7 での利用は自己責任で行い、可能であれば新しい環境への移行を検討してください。
 
+## 構成
+
+```text
+site-search/
+├── src/
+│   ├── assets/icon.svg
+│   └── entrypoints/
+│       ├── background.ts
+│       └── options/
+│           ├── index.html
+│           └── main.ts
+├── dist/          # ビルド成果物（gitignore）
+├── .wxt/          # 型定義キャッシュ（gitignore）
+├── package.json
+├── tsconfig.json
+└── wxt.config.ts
+```
+
 ## インストール
 
 ストアでは配布していません。GitHub Actions のビルド成果物を使うか、手元でビルドします。
@@ -24,7 +42,7 @@ Webページ上で選択した文字列を、右クリックメニューから�
 2. Artifacts の `site-search-chrome` または `site-search-firefox` をダウンロードする
 3. Chrome は zip を展開して使う。Firefox は zip のまま読み込める
 
-`v*` タグを push すると [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) にも zip が添付されます。署名用のシークレットを設定していれば、AMO で署名済みの Firefox 用 `.xpi` も添付されます（後述）。
+`v*` タグを push すると [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) にも zip が添付されます。署名用のシークレットを設定していれば、AMO で署名済みの `site-search-<version>-firefox-signed.xpi` も添付されます（後述）。
 
 ### 自分でビルドする
 
@@ -39,7 +57,7 @@ npm run zip                  # Chrome 用
 npm run zip:firefox          # Firefox 用
 ```
 
-ビルド結果は `.output/chrome-mv3/` と `.output/firefox-mv3/` に、zip は `.output/site-search-*-chrome.zip` と `.output/site-search-*-firefox.zip` に出力されます。
+ビルド結果は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に出力されます。
 
 `npm run build` / `npm run build -- -b firefox` でも、zip を作らずにディレクトリだけを出力できます。
 
@@ -58,7 +76,7 @@ Windows 7 で利用できる Firefox は 115 ESR が最後です。事前にイ�
 
 1. `about:debugging#/runtime/this-firefox` を開く
 2. 「一時的なアドオンを読み込む…」を選ぶ
-3. Firefox 用 zip（`.output/site-search-*-firefox.zip`）を指定する
+3. Firefox 用 zip（`dist/site-search-*-firefox.zip`）を指定する
 
 一時的なアドオンはブラウザを再起動すると削除されます。
 
@@ -116,7 +134,7 @@ export WEB_EXT_API_SECRET='...'
 npm run sign:firefox
 ```
 
-署名済み `.xpi` は `site-search/web-ext-artifacts/` に出力されます。
+署名済み `.xpi` は `site-search/dist/amo/` に出力されます。
 
 ## 使い方
 
@@ -148,6 +166,6 @@ npm run sign:firefox         # AMO で署名（要 API キー）
 
 `npm install` 時に `wxt prepare` が実行され、型検査に必要な `.wxt/` の型定義が生成されます。
 
-アイコンは `site-search/assets/icon.svg` をもとにビルド時に PNG が生成されます（Chrome は manifest のアイコンに SVG を使えないため）。リポジトリには SVG のみをコミットします。
+アイコンは `site-search/src/assets/icon.svg` をもとにビルド時に PNG が生成されます（Chrome は manifest のアイコンに SVG を使えないため）。リポジトリには SVG のみをコミットします。
 
-`.output/`、`.wxt/`、`web-ext-artifacts/` はビルド生成物のためコミットしません。
+`dist/` と `.wxt/` はビルド生成物のためコミットしません。`.wxt/` は型定義と `tsconfig` の生成キャッシュです。
