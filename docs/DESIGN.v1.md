@@ -193,7 +193,7 @@ export default defineConfig({
 ```json
 {
   "name": "site-search",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "type": "module",
   "scripts": {
