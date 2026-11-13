@@ -1,6 +1,6 @@
 {
   "name": "site-search",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,12 +8,14 @@
     "build": "wxt build",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
+    "sign:firefox": "web-ext sign --channel=unlisted --source-dir .output/firefox-mv3",
     "typecheck": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
     "@wxt-dev/auto-icons": "^1.1.2",
     "typescript": "^7.0.2",
+    "web-ext": "^10.8.0",
     "wxt": "^0.21.0"
   }
 }

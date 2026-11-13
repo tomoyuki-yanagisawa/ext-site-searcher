@@ -38,11 +38,19 @@ jobs:
       - name: Build Firefox zip
         run: npm run zip:firefox
 
+      - name: Sign Firefox xpi
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: npm run sign:firefox
+
       - name: Upload Chrome artifact
         uses: actions/upload-artifact@v7
         with:
           name: site-search-chrome
           path: site-search/.output/*chrome*.zip
+          include-hidden-files: true
           if-no-files-found: error
 
       - name: Upload Firefox artifact
@@ -50,12 +58,22 @@ jobs:
         with:
           name: site-search-firefox
           path: site-search/.output/*firefox*.zip
+          include-hidden-files: true
           if-no-files-found: error
 
-      - name: Attach zips to release
+      - name: Upload signed Firefox artifact
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: site-search-firefox-signed
+          path: site-search/web-ext-artifacts/*.xpi
+          if-no-files-found: error
+
+      - name: Attach files to release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
           files: |
             site-search/.output/*chrome*.zip
             site-search/.output/*firefox*.zip
+            site-search/web-ext-artifacts/*.xpi

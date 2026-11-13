@@ -16,7 +16,7 @@ Webページ上で選択した文字列を、右クリックメニューから�
 | Manifest | V3（両ブラウザ共通） |
 | パッケージ管理 | npm |
 | 保存先 | `browser.storage.local` |
-| 開発依存 | WXT、TypeScript、@wxt-dev/auto-icons |
+| 開発依存 | WXT、TypeScript、@wxt-dev/auto-icons、web-ext |
 
 React、Content Script、テストフレームワーク、独自の抽象化層は使わない。
 
@@ -178,7 +178,7 @@ export default defineConfig({
 ```json
 {
   "name": "site-search",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -186,12 +186,14 @@ export default defineConfig({
     "build": "wxt build",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
+    "sign:firefox": "web-ext sign --channel=unlisted --source-dir .output/firefox-mv3",
     "typecheck": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
     "@wxt-dev/auto-icons": "^1.1.2",
     "typescript": "^7.0.2",
+    "web-ext": "^10.8.0",
     "wxt": "^0.21.0"
   }
 }
@@ -209,12 +211,13 @@ npm run build                # Chrome
 npm run build -- -b firefox # Firefox
 npm run zip                  # Chrome 用 zip
 npm run zip:firefox          # Firefox 用 zip
+npm run sign:firefox         # AMO で署名（要 API キー）
 npm run typecheck            # 型検査
 ```
 
 成果物はWXTの `.output/chrome-mv3/` と `.output/firefox-mv3/` に、配布用 zip は `.output/site-search-*-chrome.zip` と `.output/site-search-*-firefox.zip` に生成される。
 
-GitHub Actions（`.github/workflows/build.yml`）で型検査と両ブラウザの zip 作成を行い、成果物を Artifacts に保存する。`v*` タグを push すると同じ zip が Release に添付される。
+GitHub Actions（`.github/workflows/build.yml`）で型検査と両ブラウザの zip 作成を行い、成果物を Artifacts に保存する。`v*` タグを push すると、`AMO_JWT_ISSUER` / `AMO_JWT_SECRET` を使って Firefox 用 XPI を署名し、zip と一緒に Release に添付する。
 
 ## 9. 完了条件
 

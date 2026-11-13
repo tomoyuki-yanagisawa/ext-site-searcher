@@ -1,4 +1,5 @@
 node_modules/
 .output/
 .wxt/
+web-ext-artifacts/
 .DS_Store
