@@ -4,6 +4,7 @@ import './style.css';
 
 const form = document.querySelector<HTMLFormElement>('#site-form')!;
 const sitesContainer = document.querySelector<HTMLElement>('#sites')!;
+const siteRow = document.querySelector<HTMLTemplateElement>('#site-row')!;
 const emptyState = document.querySelector<HTMLElement>('#empty')!;
 const addButton = document.querySelector<HTMLButtonElement>('#add')!;
 const message = document.querySelector<HTMLElement>('#message')!;
@@ -22,29 +23,9 @@ function showMessage(text: string, isError = false): void {
 }
 
 function createRow(site: Site = { name: '', url: '' }): HTMLLIElement {
-  const row = document.createElement('li');
-
-  const nameInput = document.createElement('input');
-  nameInput.type = 'text';
-  nameInput.name = 'name';
-  nameInput.value = site.name;
-  nameInput.placeholder = 'Google';
-  nameInput.setAttribute('aria-label', '名前');
-
-  const urlInput = document.createElement('input');
-  urlInput.type = 'text';
-  urlInput.name = 'url';
-  urlInput.value = site.url;
-  urlInput.placeholder = 'https://www.google.com/search?q={query}';
-  urlInput.setAttribute('aria-label', '検索URL');
-
-  const deleteButton = document.createElement('button');
-  deleteButton.type = 'button';
-  deleteButton.dataset.action = 'delete';
-  deleteButton.textContent = '削除';
-  deleteButton.setAttribute('aria-label', '削除');
-
-  row.append(nameInput, urlInput, deleteButton);
+  const row = siteRow.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+  row.querySelector<HTMLInputElement>('input[name="name"]')!.value = site.name;
+  row.querySelector<HTMLInputElement>('input[name="url"]')!.value = site.url;
   return row;
 }
 

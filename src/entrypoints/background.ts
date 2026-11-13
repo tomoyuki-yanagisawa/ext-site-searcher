@@ -1,5 +1,5 @@
 import type { Browser } from 'wxt/browser';
-import { getSettings } from '../utils/settings';
+import { getSettings, type Site } from '../utils/settings';
 import { searchUrl } from '../utils/search-url';
 
 const MENU_ROOT_ID = 'site-search';
@@ -9,6 +9,10 @@ const SITE_MENU_PREFIX = 'site-index-';
 type MenuItem = Browser.contextMenus.CreateProperties;
 
 let menuUpdateQueue: Promise<void> = Promise.resolve();
+
+function siteIdentity(site: Site): string {
+  return encodeURIComponent(JSON.stringify([site.name, site.url]));
+}
 
 /**
  * Chrome・Firefoxとも `contextMenus.create` はPromiseを返さず、
@@ -39,7 +43,7 @@ async function rebuildMenus(): Promise<void> {
 
   for (const [index, site] of sites.entries()) {
     await createMenuItem({
-      id: `${SITE_MENU_PREFIX}${index}-${encodeURIComponent(JSON.stringify([site.name, site.url]))}`,
+      id: `${SITE_MENU_PREFIX}${index}-${siteIdentity(site)}`,
       parentId: MENU_ROOT_ID,
       title: site.name,
       contexts: ['selection'],
@@ -95,19 +99,8 @@ export default defineBackground(() => {
       return;
     }
 
-    let identity: unknown;
-    try {
-      identity = JSON.parse(decodeURIComponent(match[1]));
-    } catch {
-      return;
-    }
-    if (!Array.isArray(identity) || identity.length !== 2 ||
-        typeof identity[0] !== 'string' || typeof identity[1] !== 'string') {
-      return;
-    }
-
     const { sites, openIn } = await getSettings();
-    const site = sites.find((item) => item.name === identity[0] && item.url === identity[1]);
+    const site = sites.find((item) => siteIdentity(item) === match[1]);
     if (!site || !info.selectionText) {
       return;
     }
