@@ -16,7 +16,7 @@ Webページ上で選択した文字列を、右クリックメニューから�
 | Manifest | V3（両ブラウザ共通） |
 | パッケージ管理 | npm |
 | 保存先 | `browser.storage.local` |
-| 開発依存 | WXT、TypeScript |
+| 開発依存 | WXT、TypeScript、@wxt-dev/auto-icons |
 
 React、Content Script、テストフレームワーク、独自の抽象化層は使わない。
 
@@ -89,13 +89,16 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 ```
 
 - 未設定の場合は `[]` として扱う。
-- メニューIDは `site-0`、`site-1` のように配列のインデックスを使用する。
+- メニューIDは `site-index-0`、`site-index-1` のように配列のインデックスを使用する。
+- 親メニューは `site-search`、設定項目は `site-search-options`、区切り線は `site-search-separator` とする。
 - 同期やサーバーへの送信は行わない（検索時の検索語は検索先サイトに渡される）。
 
 ## 5. 構成
 
 ```text
 site-search/
+├── assets/
+│   └── icon.svg
 ├── entrypoints/
 │   ├── background.ts
 │   └── options/
@@ -106,15 +109,16 @@ site-search/
 └── package.json
 ```
 
-手書きは**6ファイル**のみ。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
+手書きのコードは**6ファイル**のみ。アイコンは `assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時にPNG（16/32/48/96/128）を生成する。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
 
 | ファイル | 役割 |
 |---|---|
 | `background.ts` | メニュー作成、検索処理、設定変更の反映 |
 | `options/index.html` | 設定画面のマークアップとCSS |
 | `options/main.ts` | 追加・編集・削除・バリデーション・保存 |
+| `assets/icon.svg` | 拡張機能アイコンの元データ（ビルド時にPNG生成） |
 | `tsconfig.json` | TypeScript の型検査設定 |
-| `wxt.config.ts` | Manifest V3、名前、権限 |
+| `wxt.config.ts` | Manifest V3、名前、権限、アイコン生成 |
 | `package.json` | npm scripts、開発依存 |
 
 ## 6. 処理フロー
@@ -134,10 +138,17 @@ WXTの `browser` APIを使い、Chrome・Firefox固有の分岐は書かない�
 ### `wxt.config.ts`
 
 ```ts
+/// <reference types="@wxt-dev/auto-icons" />
 import { defineConfig } from 'wxt';
 
 export default defineConfig({
   manifestVersion: 3,
+  modules: ['@wxt-dev/auto-icons'],
+  autoIcons: {
+    // Chrome は SVG アイコンを manifest で扱えないため、ビルド時に PNG を生成する
+    baseIconPath: 'assets/icon.svg',
+    sizes: [128, 96, 48, 32, 16],
+  },
   manifest: ({ browser }) => ({
     name: 'Site Search',
     description: '選択した文字列を登録したサイトで検索',
@@ -146,12 +157,11 @@ export default defineConfig({
     ...(browser === 'firefox' && {
       browser_specific_settings: {
         gecko: {
-          // TODO: AMO 公開前に一意の ID へ変更する
-          id: 'site-search@example.com',
-          // Firefox 140 未満では組み込みのデータ同意が使えないため対象外にする
-          strict_min_version: '140.0',
+          id: 'site-search@tomoyuki-yanagisawa.github.io',
+          // Windows 7 で使える最後の Firefox は 115 ESR のため下限を 115 にする
+          strict_min_version: '115.0',
           data_collection_permissions: {
-            // 選択文字列を検索語として外部サイトへ送信する
+            // 選択文字列を検索語として外部サイトへ送信する。140 未満の Firefox では無視される
             required: ['searchTerms'],
           },
         },
@@ -161,7 +171,7 @@ export default defineConfig({
 });
 ```
 
-`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。
+`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。
 
 ### `package.json`
 
@@ -174,10 +184,13 @@ export default defineConfig({
   "scripts": {
     "dev": "wxt",
     "build": "wxt build",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
     "typecheck": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
+    "@wxt-dev/auto-icons": "^1.1.2",
     "typescript": "^7.0.2",
     "wxt": "^0.21.0"
   }
@@ -194,14 +207,18 @@ npm run dev                  # Chrome
 npm run dev -- -b firefox   # Firefox
 npm run build                # Chrome
 npm run build -- -b firefox # Firefox
+npm run zip                  # Chrome 用 zip
+npm run zip:firefox          # Firefox 用 zip
 npm run typecheck            # 型検査
 ```
 
-成果物はWXTの `.output/chrome-mv3/` と `.output/firefox-mv3/` に生成される。
+成果物はWXTの `.output/chrome-mv3/` と `.output/firefox-mv3/` に、配布用 zip は `.output/site-search-*-chrome.zip` と `.output/site-search-*-firefox.zip` に生成される。
+
+GitHub Actions（`.github/workflows/build.yml`）で型検査と両ブラウザの zip 作成を行い、成果物を Artifacts に保存する。`v*` タグを push すると同じ zip が Release に添付される。
 
 ## 9. 完了条件
 
-Chrome・Firefoxの両方で以下を手動確認する。
+Chrome と Firefox（Windows 7 では 115 ESR）で以下を手動確認する。
 
 - 検索サイトを追加・編集・削除・保存できる。
 - 選択文字列を右クリックして登録サイトで検索できる。
