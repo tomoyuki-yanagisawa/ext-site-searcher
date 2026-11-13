@@ -83,10 +83,6 @@ fieldset > p {
   font-size: 12px;
 }
 
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
 #sites {
   display: flex;
   flex-direction: column;
