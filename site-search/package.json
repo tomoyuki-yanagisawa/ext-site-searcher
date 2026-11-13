@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "wxt",
-    "build": "wxt build"
+    "build": "wxt build",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "wxt prepare"
   },
   "devDependencies": {
+    "typescript": "^7.0.2",
     "wxt": "^0.21.0"
   }
 }

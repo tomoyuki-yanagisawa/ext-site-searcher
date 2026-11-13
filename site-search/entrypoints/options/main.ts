@@ -4,17 +4,22 @@ const STORAGE_KEY = 'sites';
 const QUERY_PLACEHOLDER = '{query}';
 const TEST_QUERY = 'test';
 
-const form = document.querySelector('#site-form');
-const sitesContainer = document.querySelector('#sites');
-const addButton = document.querySelector('#add');
-const message = document.querySelector('#message');
+interface Site {
+  name: string;
+  url: string;
+}
 
-function showMessage(text, isError = false) {
+const form = document.querySelector<HTMLFormElement>('#site-form')!;
+const sitesContainer = document.querySelector<HTMLElement>('#sites')!;
+const addButton = document.querySelector<HTMLButtonElement>('#add')!;
+const message = document.querySelector<HTMLElement>('#message')!;
+
+function showMessage(text: string, isError = false): void {
   message.textContent = text;
   message.classList.toggle('error', isError);
 }
 
-function createRow(site = { name: '', url: '' }) {
+function createRow(site: Site = { name: '', url: '' }): HTMLDivElement {
   const row = document.createElement('div');
   row.className = 'site-row';
 
@@ -42,13 +47,13 @@ function createRow(site = { name: '', url: '' }) {
   return row;
 }
 
-function appendRow(site) {
+function appendRow(site?: Site): HTMLDivElement {
   const row = createRow(site);
   sitesContainer.append(row);
   return row;
 }
 
-function validateSite(site) {
+function validateSite(site: Site): string | null {
   const name = site.name.trim();
   const url = site.url.trim();
 
@@ -78,9 +83,9 @@ function validateSite(site) {
   return null;
 }
 
-async function loadSites() {
+async function loadSites(): Promise<void> {
   const { [STORAGE_KEY]: sites } = await browser.storage.local.get(STORAGE_KEY);
-  const list = Array.isArray(sites) ? sites : [];
+  const list: Site[] = Array.isArray(sites) ? sites : [];
 
   sitesContainer.replaceChildren();
   list.forEach(appendRow);
@@ -90,11 +95,11 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
   const rows = [...sitesContainer.querySelectorAll('.site-row')];
-  const sites = [];
+  const sites: Site[] = [];
 
   for (const [index, row] of rows.entries()) {
-    const nameInput = row.querySelector('input[name="name"]');
-    const urlInput = row.querySelector('input[name="url"]');
+    const nameInput = row.querySelector<HTMLInputElement>('input[name="name"]')!;
+    const urlInput = row.querySelector<HTMLInputElement>('input[name="url"]')!;
     const site = { name: nameInput.value, url: urlInput.value };
     const error = validateSite(site);
 
@@ -111,25 +116,31 @@ form.addEventListener('submit', async (event) => {
     await browser.storage.local.set({ [STORAGE_KEY]: sites });
     showMessage('保存しました。');
   } catch (error) {
-    showMessage(`保存に失敗しました: ${error.message}`, true);
+    const detail = error instanceof Error ? error.message : String(error);
+    showMessage(`保存に失敗しました: ${detail}`, true);
   }
 });
 
 addButton.addEventListener('click', () => {
   showMessage('');
-  appendRow().querySelector('input').focus();
+  appendRow().querySelector('input')?.focus();
 });
 
 sitesContainer.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element)) {
+    return;
+  }
+
   const button = event.target.closest('button[data-action="delete"]');
   if (!button) {
     return;
   }
 
-  button.closest('.site-row').remove();
+  button.closest('.site-row')?.remove();
   showMessage('');
 });
 
-loadSites().catch((error) => {
-  showMessage(`設定の読み込みに失敗しました: ${error.message}`, true);
+loadSites().catch((error: unknown) => {
+  const detail = error instanceof Error ? error.message : String(error);
+  showMessage(`設定の読み込みに失敗しました: ${detail}`, true);
 });

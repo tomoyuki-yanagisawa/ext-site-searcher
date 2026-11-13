@@ -11,14 +11,14 @@ Webページ上で選択した文字列を、右クリックメニューから�
 | 項目 | 採用 |
 |---|---|
 | フレームワーク | WXT |
-| 言語 | JavaScript（ES Modules） |
+| 言語 | TypeScript |
 | UI | Vanilla HTML/CSS/JS |
 | Manifest | V3（両ブラウザ共通） |
 | パッケージ管理 | npm |
 | 保存先 | `browser.storage.local` |
-| 開発依存 | WXTのみ |
+| 開発依存 | WXT、TypeScript |
 
-React、TypeScript、Content Script、テストフレームワーク、独自の抽象化層は使わない。
+React、Content Script、テストフレームワーク、独自の抽象化層は使わない。
 
 ## 3. 機能
 
@@ -97,23 +97,25 @@ React、TypeScript、Content Script、テストフレームワーク、独自の
 ```text
 site-search/
 ├── entrypoints/
-│   ├── background.js
+│   ├── background.ts
 │   └── options/
 │       ├── index.html
-│       └── main.js
-├── wxt.config.js
+│       └── main.ts
+├── tsconfig.json
+├── wxt.config.ts
 └── package.json
 ```
 
-手書きは**5ファイル**のみ。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
+手書きは**6ファイル**のみ。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
 
 | ファイル | 役割 |
 |---|---|
-| `background.js` | メニュー作成、検索処理、設定変更の反映 |
+| `background.ts` | メニュー作成、検索処理、設定変更の反映 |
 | `options/index.html` | 設定画面のマークアップとCSS |
-| `options/main.js` | 追加・編集・削除・バリデーション・保存 |
-| `wxt.config.js` | Manifest V3、名前、権限 |
-| `package.json` | npm scripts、WXT依存 |
+| `options/main.ts` | 追加・編集・削除・バリデーション・保存 |
+| `tsconfig.json` | TypeScript の型検査設定 |
+| `wxt.config.ts` | Manifest V3、名前、権限 |
+| `package.json` | npm scripts、開発依存 |
 
 ## 6. 処理フロー
 
@@ -129,22 +131,37 @@ WXTの `browser` APIを使い、Chrome・Firefox固有の分岐は書かない�
 
 ## 7. 設定
 
-### `wxt.config.js`
+### `wxt.config.ts`
 
-```js
+```ts
 import { defineConfig } from 'wxt';
 
 export default defineConfig({
   manifestVersion: 3,
-  manifest: {
+  manifest: ({ browser }) => ({
     name: 'Site Search',
     description: '選択した文字列を登録したサイトで検索',
     permissions: ['contextMenus', 'storage'],
-  },
+    // Firefox 専用の設定は Chrome の manifest に含めない
+    ...(browser === 'firefox' && {
+      browser_specific_settings: {
+        gecko: {
+          // TODO: AMO 公開前に一意の ID へ変更する
+          id: 'site-search@example.com',
+          // Firefox 140 未満では組み込みのデータ同意が使えないため対象外にする
+          strict_min_version: '140.0',
+          data_collection_permissions: {
+            // 選択文字列を検索語として外部サイトへ送信する
+            required: ['searchTerms'],
+          },
+        },
+      },
+    }),
+  }),
 });
 ```
 
-`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。
+`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。
 
 ### `package.json`
 
@@ -156,15 +173,18 @@ export default defineConfig({
   "type": "module",
   "scripts": {
     "dev": "wxt",
-    "build": "wxt build"
+    "build": "wxt build",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "wxt prepare"
   },
   "devDependencies": {
+    "typescript": "^7.0.2",
     "wxt": "^0.21.0"
   }
 }
 ```
 
-実装時に利用するWXTの互換バージョンを確認し、`package-lock.json` をコミットする。
+`postinstall` で `wxt prepare` を実行し、`.wxt/` に型定義を生成する。実装時に利用するWXTの互換バージョンを確認し、`package-lock.json` をコミットする。
 
 ## 8. 開発コマンド
 
@@ -174,6 +194,7 @@ npm run dev                  # Chrome
 npm run dev -- -b firefox   # Firefox
 npm run build                # Chrome
 npm run build -- -b firefox # Firefox
+npm run typecheck            # 型検査
 ```
 
 成果物はWXTの `.output/chrome-mv3/` と `.output/firefox-mv3/` に生成される。
