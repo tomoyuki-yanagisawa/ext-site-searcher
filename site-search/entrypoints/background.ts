@@ -2,14 +2,19 @@ const MENU_ROOT_ID = 'site-search';
 const MENU_OPTIONS_ID = 'site-search-options';
 const SITE_MENU_PREFIX = 'site-';
 
-let menuUpdateQueue = Promise.resolve();
+interface Site {
+  name: string;
+  url: string;
+}
 
-async function getSites() {
+let menuUpdateQueue: Promise<void> = Promise.resolve();
+
+async function getSites(): Promise<Site[]> {
   const { sites } = await browser.storage.local.get('sites');
   return Array.isArray(sites) ? sites : [];
 }
 
-async function rebuildMenus() {
+async function rebuildMenus(): Promise<void> {
   const sites = await getSites();
 
   await browser.contextMenus.removeAll();
@@ -45,7 +50,7 @@ async function rebuildMenus() {
   });
 }
 
-function enqueueMenuUpdate() {
+function enqueueMenuUpdate(): Promise<void> {
   menuUpdateQueue = menuUpdateQueue
     .then(rebuildMenus)
     .catch((error) => console.error('Failed to update context menus', error));
