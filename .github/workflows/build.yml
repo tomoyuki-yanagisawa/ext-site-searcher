@@ -68,11 +68,17 @@ jobs:
         run: |
           version=$(node -p "require('./package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          if gh release view "v$version" >/dev/null 2>&1; then
-            echo "needed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "needed=true" >> "$GITHUB_OUTPUT"
-          fi
+          gh api "repos/$GITHUB_REPOSITORY" >/dev/null
+          tag=$(node -p "encodeURIComponent('v' + process.argv[1])" "$version")
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/tags/$tag")
+          case "$status" in
+            200) echo "needed=false" >> "$GITHUB_OUTPUT" ;;
+            404) echo "needed=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "Release lookup failed (HTTP $status)" >&2; exit 1 ;;
+          esac
 
   release:
     needs: [test, version]

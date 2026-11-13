@@ -39,7 +39,7 @@ async function rebuildMenus(): Promise<void> {
 
   for (const [index, site] of sites.entries()) {
     await createMenuItem({
-      id: `${SITE_MENU_PREFIX}${index}`,
+      id: `${SITE_MENU_PREFIX}${index}-${encodeURIComponent(JSON.stringify([site.name, site.url]))}`,
       parentId: MENU_ROOT_ID,
       title: site.name,
       contexts: ['selection'],
@@ -90,14 +90,24 @@ export default defineBackground(() => {
       return;
     }
 
-    const indexText = info.menuItemId.slice(SITE_MENU_PREFIX.length);
-    if (!/^\d+$/.test(indexText)) {
+    const match = /^\d+-(.+)$/.exec(info.menuItemId.slice(SITE_MENU_PREFIX.length));
+    if (!match?.[1]) {
       return;
     }
-    const index = Number(indexText);
+
+    let identity: unknown;
+    try {
+      identity = JSON.parse(decodeURIComponent(match[1]));
+    } catch {
+      return;
+    }
+    if (!Array.isArray(identity) || identity.length !== 2 ||
+        typeof identity[0] !== 'string' || typeof identity[1] !== 'string') {
+      return;
+    }
 
     const { sites, openIn } = await getSettings();
-    const site = sites[index];
+    const site = sites.find((item) => item.name === identity[0] && item.url === identity[1]);
     if (!site || !info.selectionText) {
       return;
     }
