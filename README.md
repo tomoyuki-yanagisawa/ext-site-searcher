@@ -1,6 +1,6 @@
 # Site Search
 
-[![Build](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/actions/workflows/build.yml/badge.svg)](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/actions/workflows/build.yml)
+[![CI](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/actions/workflows/build.yml/badge.svg)](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/actions/workflows/build.yml)
 
 Webページ上で選択した文字列を、右クリックメニューから登録したサイトで検索する Chrome・Firefox 用のブラウザ拡張機能です。検索先は設定画面で自由に追加・編集・削除できます。
 
@@ -40,11 +40,11 @@ Webページ上で選択した文字列を、右クリックメニューから�
 
 ### ビルド済みパッケージを使う
 
-1. GitHub の [Actions](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/actions) で最新の `Build` を開く
-2. Artifacts の `site-search-chrome` または `site-search-firefox` をダウンロードする
+1. GitHub の [Actions](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/actions) で最新の `CI` を開く
+2. Artifacts の `site-search-chrome-zip` または `site-search-firefox-zip` をダウンロードする
 3. Chrome は zip を展開して使う。Firefox は zip のまま読み込める
 
-`v*` タグを push すると [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) にも zip が添付されます。署名用のシークレットを設定していれば、AMO で署名済みの `site-search-<version>-firefox-signed.xpi` も添付されます（後述）。
+バージョンを上げて `main` にマージすると [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) が自動作成されます。署名用のシークレットを設定していれば、AMO で署名済みの `site-search-<version>-firefox-signed.xpi` も添付されます（後述）。
 
 ### 自分でビルドする
 
@@ -94,7 +94,7 @@ AMO（addons.mozilla.org）で署名した xpi を使う場合、署名チェッ
 
 ## リリースと署名（GitHub Actions）
 
-`main` への push と PR では、Chrome / Firefox の zip をビルドして Artifacts に保存します。`v*` タグを push すると、AMO の署名 API で Firefox 用 XPI を署名し、zip と一緒に Release に添付します。
+`main` への push と PR では、`test` ジョブが Chrome / Firefox の zip をビルドして Artifacts に保存します。PR ではここまでです。`main` では `version` ジョブが未リリースか確認し、必要なら `release` ジョブが AMO で Firefox 用 XPI を署名して `v<version>` タグと Release を自動作成します。
 
 ### シークレットの登録
 
@@ -116,16 +116,21 @@ gh secret set AMO_JWT_SECRET
 
 ### リリース手順
 
-1. `package.json` の `version` を上げる
-2. `main` にマージする
-3. タグを push する
+1. バージョンを上げる
+2. コミットして `main` にマージする
+3. Actions が完了すると `v<version>` タグと Release が自動作成される
 
 ```sh
-git tag v0.1.1
-git push origin v0.1.1
+npm version patch --no-git-tag-version
+git add package.json package-lock.json
+git commit -m "chore: release 0.1.2"
 ```
 
-`main` への push ではビルドのみ行います。AMO は同じバージョンを再署名できないため、署名はタグを切ったときだけ実行します。
+`package.json` の version がすでにリリース済みの場合、ビルドと Artifacts のみ行われ、署名と Release はスキップされます。AMO は同じバージョンを再署名できないため、修正版は必ずバージョンを上げてください。
+
+手動でタグを push する必要はありません。`workflow_dispatch` はビルド確認用で、Release は作成しません。
+
+ここで作成される XPI は AMO の **unlisted（非公開）署名**です。AMO での一般公開や Chrome Web Store への公開は別途手続きが必要です。
 
 ### 手元で署名する
 

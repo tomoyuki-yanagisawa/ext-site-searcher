@@ -224,7 +224,7 @@ npm run typecheck            # 型検査
 
 成果物は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、配布用 zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に生成される。署名済み XPI は `dist/amo/` に出力される。
 
-GitHub Actions（`.github/workflows/build.yml`）で型検査と両ブラウザの zip 作成を行い、成果物を Artifacts に保存する。`v*` タグを push すると、`AMO_JWT_ISSUER` / `AMO_JWT_SECRET` を使って Firefox 用 XPI を署名し、`site-search-<version>-firefox-signed.xpi` にリネームして zip と一緒に Release に添付する。
+GitHub Actions（`.github/workflows/build.yml`）は `test` / `version` / `release` の3ジョブで構成する。PR では `test`（型検査と zip 作成）のみ、`main` では `version` で未リリースか確認し、必要なら `release` が `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` を使って Firefox 用 XPI を署名し、`site-search-<version>-firefox-signed.xpi` にリネームして `v<version>` タグと Release を自動作成する。リリース済みのバージョンでは署名と Release をスキップする。
 
 ## 9. 完了条件
 
