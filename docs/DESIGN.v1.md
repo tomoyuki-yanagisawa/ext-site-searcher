@@ -59,7 +59,8 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 - 設定画面は埋め込みダイアログではなく、ブラウザのタブで開く（`options_ui.open_in_tab`）。
 - 入力中は保存せず、「保存」でまとめて永続化する。
 - 保存結果または入力エラーを画面に表示する。
-- CSSは `index.html` 内に記述し、別ファイルを増やさない。
+- HTMLはクラスを使わず、フォーム部品はOS / ブラウザ標準の見た目をそのまま使う。
+- CSSは `options/style.css` に記述し、`options/main.ts` から import する。
 
 ### 3.3 URLテンプレート
 
@@ -105,19 +106,21 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 │       ├── background.ts
 │       └── options/
 │           ├── index.html
-│           └── main.ts
+│           ├── main.ts
+│           └── style.css
 ├── tsconfig.json
 ├── wxt.config.ts
 └── package.json
 ```
 
-手書きのコードは**6ファイル**のみ。ソースは `src/`、ビルド成果物は `dist/`、型定義キャッシュは `.wxt/` に出力される（`dist/` と `.wxt/` はコミットしない）。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時にPNG（16/32/48/96/128）を生成する。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
+手書きのコードは**7ファイル**のみ。ソースは `src/`、ビルド成果物は `dist/`、型定義キャッシュは `.wxt/` に出力される（`dist/` と `.wxt/` はコミットしない）。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時にPNG（16/32/48/96/128）を生成する。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
 
 | ファイル | 役割 |
 |---|---|
 | `src/entrypoints/background.ts` | メニュー作成、検索処理、設定変更の反映 |
-| `src/entrypoints/options/index.html` | 設定画面のマークアップとCSS |
+| `src/entrypoints/options/index.html` | 設定画面のマークアップ |
 | `src/entrypoints/options/main.ts` | 追加・編集・削除・バリデーション・保存 |
+| `src/entrypoints/options/style.css` | 設定画面のスタイル（OS / ブラウザ標準に寄せる） |
 | `src/assets/icon.svg` | 拡張機能アイコンの元データ（ビルド時にPNG生成） |
 | `tsconfig.json` | TypeScript の型検査設定 |
 | `wxt.config.ts` | Manifest V3、名前、権限、アイコン生成 |
