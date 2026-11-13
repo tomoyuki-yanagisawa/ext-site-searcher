@@ -19,8 +19,13 @@ function isSite(value: unknown): value is Site {
 
 const form = document.querySelector<HTMLFormElement>('#site-form')!;
 const sitesContainer = document.querySelector<HTMLElement>('#sites')!;
+const emptyState = document.querySelector<HTMLElement>('#empty')!;
 const addButton = document.querySelector<HTMLButtonElement>('#add')!;
 const message = document.querySelector<HTMLElement>('#message')!;
+
+function updateEmptyState(): void {
+  emptyState.hidden = sitesContainer.querySelector('.site-row') !== null;
+}
 
 function showMessage(text: string, isError = false): void {
   message.textContent = text;
@@ -97,6 +102,7 @@ async function loadSites(): Promise<void> {
 
   sitesContainer.replaceChildren();
   list.forEach((site) => appendRow(site));
+  updateEmptyState();
 }
 
 form.addEventListener('submit', async (event) => {
@@ -132,6 +138,7 @@ form.addEventListener('submit', async (event) => {
 addButton.addEventListener('click', () => {
   showMessage('');
   appendRow().querySelector('input')?.focus();
+  updateEmptyState();
 });
 
 sitesContainer.addEventListener('click', (event) => {
@@ -146,6 +153,7 @@ sitesContainer.addEventListener('click', (event) => {
 
   button.closest('.site-row')?.remove();
   showMessage('');
+  updateEmptyState();
 });
 
 loadSites().catch((error: unknown) => {
