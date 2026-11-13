@@ -1,40 +1,14 @@
 import type { Browser } from 'wxt/browser';
+import { getSettings } from '../utils/settings';
+import { searchUrl } from '../utils/search-url';
 
 const MENU_ROOT_ID = 'site-search';
 const MENU_OPTIONS_ID = 'site-search-options';
 const SITE_MENU_PREFIX = 'site-index-';
 
-interface Site {
-  name: string;
-  url: string;
-}
-
-type OpenIn = 'newTab' | 'currentTab';
-
-const OPEN_IN_KEY = 'openIn';
-const DEFAULT_OPEN_IN: OpenIn = 'newTab';
-
 type MenuItem = Browser.contextMenus.CreateProperties;
 
 let menuUpdateQueue: Promise<void> = Promise.resolve();
-
-function isSite(value: unknown): value is Site {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const site = value as Record<string, unknown>;
-  return typeof site.name === 'string' && typeof site.url === 'string';
-}
-
-async function getSites(): Promise<Site[]> {
-  const { sites } = await browser.storage.local.get('sites');
-  return Array.isArray(sites) ? sites.filter(isSite) : [];
-}
-
-async function getOpenIn(): Promise<OpenIn> {
-  const { [OPEN_IN_KEY]: openIn } = await browser.storage.local.get(OPEN_IN_KEY);
-  return openIn === 'currentTab' ? 'currentTab' : DEFAULT_OPEN_IN;
-}
 
 /**
  * Chrome・Firefoxとも `contextMenus.create` はPromiseを返さず、
@@ -54,7 +28,7 @@ function createMenuItem(item: MenuItem): Promise<void> {
 }
 
 async function rebuildMenus(): Promise<void> {
-  const sites = await getSites();
+  const { sites } = await getSettings();
 
   await browser.contextMenus.removeAll();
   await createMenuItem({
@@ -122,16 +96,15 @@ export default defineBackground(() => {
     }
     const index = Number(indexText);
 
-    const site = (await getSites())[index];
+    const { sites, openIn } = await getSettings();
+    const site = sites[index];
     if (!site || !info.selectionText) {
       return;
     }
 
-    const url = site.url
-      .split('{query}')
-      .join(encodeURIComponent(info.selectionText));
+    const url = searchUrl(site.url, info.selectionText);
 
-    if ((await getOpenIn()) === 'currentTab' && tab?.id !== undefined) {
+    if (openIn === 'currentTab' && tab?.id !== undefined) {
       await browser.tabs.update(tab.id, { url });
       return;
     }
@@ -139,6 +112,7 @@ export default defineBackground(() => {
     // 現在のタブの右隣に開く
     await browser.tabs.create({
       url,
+      windowId: tab?.windowId,
       index: tab ? tab.index + 1 : undefined,
     });
   });
