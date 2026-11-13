@@ -26,6 +26,7 @@ describe('background menus', () => {
     updateTab = vi.fn().mockResolvedValue(undefined);
     openOptions = vi.fn().mockResolvedValue(undefined);
     const browser = {
+      i18n: { getMessage: (key: string) => key },
       storage: {
         local: { get: vi.fn(async () => ({ sites, openIn })) },
         onChanged: { addListener: (listener: typeof changed) => { changed = listener; } },
@@ -61,6 +62,11 @@ describe('background menus', () => {
     if (!menu) throw new Error(`Missing menu ${name}`);
     return menu.id;
   }
+
+  it('uses translated messages for built-in menu titles', () => {
+    expect(menuId('menuSearch')).toBe('site-search');
+    expect(menuId('menuSettings')).toBe('site-search-options');
+  });
 
   it('opens the selected site to the right in the source window', async () => {
     await click({ menuItemId: menuId('Google'), selectionText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });

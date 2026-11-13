@@ -1,5 +1,6 @@
 import { getSettings, saveSettings, type Site } from '../../utils/settings';
 import { validateSite } from '../../utils/search-url';
+import { browser } from 'wxt/browser';
 import './style.css';
 
 const form = document.querySelector<HTMLFormElement>('#site-form')!;
@@ -8,6 +9,20 @@ const siteRow = document.querySelector<HTMLTemplateElement>('#site-row')!;
 const emptyState = document.querySelector<HTMLElement>('#empty')!;
 const addButton = document.querySelector<HTMLButtonElement>('#add')!;
 const message = document.querySelector<HTMLElement>('#message')!;
+
+function translate(root: ParentNode): void {
+  type MessageKey = Parameters<typeof browser.i18n.getMessage>[0];
+  root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((element) => {
+    element.textContent = browser.i18n.getMessage(element.dataset.i18n as MessageKey);
+  });
+  root.querySelectorAll<HTMLElement>('[data-i18n-label]').forEach((element) => {
+    element.setAttribute('aria-label', browser.i18n.getMessage(element.dataset.i18nLabel as MessageKey));
+  });
+}
+
+document.documentElement.lang = browser.i18n.getUILanguage().toLowerCase().startsWith('ja') ? 'ja' : 'en';
+translate(document);
+translate(siteRow.content);
 
 function updateEmptyState(): void {
   emptyState.hidden = sitesContainer.querySelector('li') !== null;
@@ -63,7 +78,7 @@ form.addEventListener('submit', async (event) => {
     const error = validateSite(site);
 
     if (error) {
-      showMessage(`${index + 1}件目: ${error}`, true);
+      showMessage(browser.i18n.getMessage('rowError', [String(index + 1), browser.i18n.getMessage(error)]), true);
       (nameInput.value.trim() ? urlInput : nameInput).focus();
       return;
     }
@@ -77,10 +92,10 @@ form.addEventListener('submit', async (event) => {
     );
     const openIn = openInSelected?.value === 'currentTab' ? 'currentTab' : 'newTab';
     await saveSettings({ sites, openIn });
-    showMessage('保存しました。');
+    showMessage(browser.i18n.getMessage('saved'));
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    showMessage(`保存に失敗しました: ${detail}`, true);
+    showMessage(browser.i18n.getMessage('saveFailed', detail), true);
   }
 });
 
@@ -111,5 +126,5 @@ loadSettings().catch((error: unknown) => {
   });
   form.inert = false;
   const detail = error instanceof Error ? error.message : String(error);
-  showMessage(`設定の読み込みに失敗しました: ${detail}`, true);
+  showMessage(browser.i18n.getMessage('loadFailed', detail), true);
 });

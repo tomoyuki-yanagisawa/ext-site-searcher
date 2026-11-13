@@ -10,11 +10,11 @@ describe('searchUrl', () => {
 
 describe('validateSite', () => {
   it.each([
-    [{ name: '', url: 'https://example.com/?q={query}' }, '名前を入力してください。'],
-    [{ name: 'Site', url: '' }, '検索URLを入力してください。'],
-    [{ name: 'Site', url: 'https://example.com/' }, '検索URLには {query} を含めてください。'],
-    [{ name: 'Site', url: 'invalid {query}' }, '検索URLの形式が正しくありません。'],
-    [{ name: 'Site', url: 'javascript:{query}' }, '検索URLは http:// または https:// で始めてください。'],
+    [{ name: '', url: 'https://example.com/?q={query}' }, 'nameRequired'],
+    [{ name: 'Site', url: '' }, 'urlRequired'],
+    [{ name: 'Site', url: 'https://example.com/' }, 'queryRequired'],
+    [{ name: 'Site', url: 'invalid {query}' }, 'urlInvalid'],
+    [{ name: 'Site', url: 'javascript:{query}' }, 'urlProtocol'],
     [{ name: ' Site ', url: ' https://example.com/?q={query} ' }, null],
   ])('validates %o', (site, expected) => {
     expect(validateSite(site)).toBe(expected);
