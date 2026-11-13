@@ -1,7 +1,14 @@
+/// <reference types="@wxt-dev/auto-icons" />
 import { defineConfig } from 'wxt';
 
 export default defineConfig({
   manifestVersion: 3,
+  modules: ['@wxt-dev/auto-icons'],
+  autoIcons: {
+    // Chrome は SVG アイコンを manifest で扱えないため、ビルド時に PNG を生成する
+    baseIconPath: 'assets/icon.svg',
+    sizes: [128, 96, 48, 32, 16],
+  },
   manifest: ({ browser }) => ({
     name: 'Site Search',
     description: '選択した文字列を登録したサイトで検索',
