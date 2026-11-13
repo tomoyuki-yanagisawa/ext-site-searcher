@@ -24,7 +24,8 @@ Webページ上で選択した文字列を、右クリックメニューから�
 │       ├── background.ts
 │       └── options/
 │           ├── index.html
-│           └── main.ts
+│           ├── main.ts
+│           └── style.css
 ├── dist/          # ビルド成果物（gitignore）
 ├── .wxt/          # 型定義キャッシュ（gitignore）
 ├── docs/

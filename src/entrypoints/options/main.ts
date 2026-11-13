@@ -1,4 +1,5 @@
 import { browser } from 'wxt/browser';
+import './style.css';
 
 const STORAGE_KEY = 'sites';
 const QUERY_PLACEHOLDER = '{query}';
@@ -24,17 +25,20 @@ const addButton = document.querySelector<HTMLButtonElement>('#add')!;
 const message = document.querySelector<HTMLElement>('#message')!;
 
 function updateEmptyState(): void {
-  emptyState.hidden = sitesContainer.querySelector('.site-row') !== null;
+  emptyState.hidden = sitesContainer.querySelector('li') !== null;
 }
 
 function showMessage(text: string, isError = false): void {
   message.textContent = text;
-  message.classList.toggle('error', isError);
+  if (isError) {
+    message.setAttribute('data-error', '');
+  } else {
+    message.removeAttribute('data-error');
+  }
 }
 
-function createRow(site: Site = { name: '', url: '' }): HTMLDivElement {
-  const row = document.createElement('div');
-  row.className = 'site-row';
+function createRow(site: Site = { name: '', url: '' }): HTMLLIElement {
+  const row = document.createElement('li');
 
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
@@ -60,7 +64,7 @@ function createRow(site: Site = { name: '', url: '' }): HTMLDivElement {
   return row;
 }
 
-function appendRow(site?: Site): HTMLDivElement {
+function appendRow(site?: Site): HTMLLIElement {
   const row = createRow(site);
   sitesContainer.append(row);
   return row;
@@ -108,7 +112,7 @@ async function loadSites(): Promise<void> {
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
-  const rows = [...sitesContainer.querySelectorAll('.site-row')];
+  const rows = [...sitesContainer.querySelectorAll('li')];
   const sites: Site[] = [];
 
   for (const [index, row] of rows.entries()) {
@@ -151,7 +155,7 @@ sitesContainer.addEventListener('click', (event) => {
     return;
   }
 
-  button.closest('.site-row')?.remove();
+  button.closest('li')?.remove();
   showMessage('');
   updateEmptyState();
 });
