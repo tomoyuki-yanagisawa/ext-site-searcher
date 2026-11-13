@@ -31,11 +31,7 @@ function updateEmptyState(): void {
 
 function showMessage(text: string, isError = false): void {
   message.textContent = text;
-  if (isError) {
-    message.setAttribute('data-error', '');
-  } else {
-    message.removeAttribute('data-error');
-  }
+  message.toggleAttribute('data-error', isError);
 }
 
 function createRow(site: Site = { name: '', url: '' }): HTMLLIElement {
