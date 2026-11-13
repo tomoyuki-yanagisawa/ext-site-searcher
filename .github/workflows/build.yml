@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.run_id || github.ref }}
+  queue: max
 
 permissions:
   contents: read
@@ -16,6 +16,9 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-test-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -65,20 +68,7 @@ jobs:
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          version=$(node -p "require('./package.json').version")
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          gh api "repos/$GITHUB_REPOSITORY" >/dev/null
-          tag=$(node -p "encodeURIComponent('v' + process.argv[1])" "$version")
-          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
-            --header "Authorization: Bearer $GH_TOKEN" \
-            --header 'Accept: application/vnd.github+json' \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/tags/$tag")
-          case "$status" in
-            200) echo "needed=false" >> "$GITHUB_OUTPUT" ;;
-            404) echo "needed=true" >> "$GITHUB_OUTPUT" ;;
-            *) echo "Release lookup failed (HTTP $status)" >&2; exit 1 ;;
-          esac
+        run: node .github/scripts/check-release.mjs
 
   release:
     needs: [test, version]
