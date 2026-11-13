@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('wxt/browser', () => ({ browser: {} }));
 
-import { normalizeSettings } from './settings';
+import { normalizeSettings } from '../src/utils/settings';
 
 describe('normalizeSettings', () => {
   it('uses defaults for missing or invalid values', () => {

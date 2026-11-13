@@ -33,6 +33,14 @@
 
           <ol id="sites"></ol>
 
+          <template id="site-row">
+            <li>
+              <input type="text" name="name" placeholder="Google" aria-label="名前" />
+              <input type="text" name="url" placeholder="https://www.google.com/search?q={query}" aria-label="検索URL" />
+              <button type="button" data-action="delete" aria-label="削除">削除</button>
+            </li>
+          </template>
+
           <p id="empty">
             まだ検索サイトが登録されていません。「サイトを追加」から登録してください。
           </p>

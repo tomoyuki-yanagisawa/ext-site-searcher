@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { searchUrl, validateSite } from './search-url';
+import { searchUrl, validateSite } from '../src/utils/search-url';
 
 describe('searchUrl', () => {
   it('encodes the query in every placeholder', () => {
