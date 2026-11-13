@@ -6,6 +6,7 @@ import './style.css';
 const form = document.querySelector<HTMLFormElement>('#site-form')!;
 const sitesContainer = document.querySelector<HTMLElement>('#sites')!;
 const siteRow = document.querySelector<HTMLTemplateElement>('#site-row')!;
+const copyQueryInput = document.querySelector<HTMLInputElement>('#copy-query')!;
 const emptyState = document.querySelector<HTMLElement>('#empty')!;
 const addButton = document.querySelector<HTMLButtonElement>('#add')!;
 const message = document.querySelector<HTMLElement>('#message')!;
@@ -51,7 +52,8 @@ function appendRow(site?: Site): HTMLLIElement {
 }
 
 async function loadSettings(): Promise<void> {
-  const { sites, openIn } = await getSettings();
+  const { sites, openIn, copyQuery } = await getSettings();
+  copyQueryInput.checked = copyQuery;
   const openInInput = form.querySelector<HTMLInputElement>(
     `input[name="openIn"][value="${openIn}"]`,
   );
@@ -91,7 +93,7 @@ form.addEventListener('submit', async (event) => {
       'input[name="openIn"]:checked',
     );
     const openIn = openInSelected?.value === 'currentTab' ? 'currentTab' : 'newTab';
-    await saveSettings({ sites, openIn });
+    await saveSettings({ sites, openIn, copyQuery: copyQueryInput.checked });
     showMessage(browser.i18n.getMessage('saved'));
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);

@@ -99,13 +99,21 @@ export default defineBackground(() => {
       return;
     }
 
-    const { sites, openIn } = await getSettings();
+    const { sites, openIn, copyQuery } = await getSettings();
     const site = sites.find((item) => siteIdentity(item) === match[1]);
     if (!site || !info.selectionText) {
       return;
     }
 
     const url = searchUrl(site.url, info.selectionText);
+
+    if (copyQuery) {
+      try {
+        await navigator.clipboard.writeText(info.selectionText);
+      } catch (error) {
+        console.error('Failed to copy search query', error);
+      }
+    }
 
     if (openIn === 'currentTab' && tab?.id !== undefined) {
       await browser.tabs.update(tab.id, { url });

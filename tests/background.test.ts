@@ -9,6 +9,7 @@ const other = { name: 'Other', url: 'https://example.com/?q={query}' };
 describe('background menus', () => {
   let sites: typeof google[];
   let openIn: string;
+  let copyQuery: boolean;
   let menus: Menu[];
   let click: Click;
   let changed: (changes: object, area: string) => void;
@@ -16,19 +17,22 @@ describe('background menus', () => {
   let createTab: ReturnType<typeof vi.fn>;
   let updateTab: ReturnType<typeof vi.fn>;
   let openOptions: ReturnType<typeof vi.fn>;
+  let writeText: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     vi.resetModules();
     sites = [google, other];
     openIn = 'newTab';
+    copyQuery = false;
     menus = [];
     createTab = vi.fn().mockResolvedValue(undefined);
     updateTab = vi.fn().mockResolvedValue(undefined);
     openOptions = vi.fn().mockResolvedValue(undefined);
+    writeText = vi.fn().mockResolvedValue(undefined);
     const browser = {
       i18n: { getMessage: (key: string) => key },
       storage: {
-        local: { get: vi.fn(async () => ({ sites, openIn })) },
+        local: { get: vi.fn(async () => ({ sites, openIn, copyQuery })) },
         onChanged: { addListener: (listener: typeof changed) => { changed = listener; } },
       },
       runtime: {
@@ -45,6 +49,7 @@ describe('background menus', () => {
       tabs: { create: createTab, update: updateTab },
     };
     vi.stubGlobal('browser', browser);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
     vi.stubGlobal('defineBackground', (callback: () => void) => ({ main: callback }));
     vi.doMock('wxt/browser', () => ({ browser }));
     const background = await import('../src/entrypoints/background');
@@ -72,6 +77,27 @@ describe('background menus', () => {
     await click({ menuItemId: menuId('Google'), selectionText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });
     expect(createTab).toHaveBeenCalledWith({ url: 'https://google.com/search?q=%E7%8C%AB%20%26%20%E7%8A%AC', index: 3, windowId: 8 });
     expect(updateTab).not.toHaveBeenCalled();
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it('copies the original text when enabled', async () => {
+    copyQuery = true;
+    await click({ menuItemId: menuId('Google'), selectionText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });
+    expect(writeText).toHaveBeenCalledWith('猫 & 犬');
+    expect(createTab).toHaveBeenCalledOnce();
+  });
+
+  it('still searches when copying fails', async () => {
+    copyQuery = true;
+    writeText.mockRejectedValue(new Error('clipboard unavailable'));
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await click({ menuItemId: menuId('Google'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
+      expect(createTab).toHaveBeenCalledWith({ url: 'https://google.com/search?q=test', index: 3, windowId: 8 });
+      expect(log).toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it('opens in the current tab when configured', async () => {

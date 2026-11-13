@@ -15,7 +15,8 @@ export default defineConfig({
     name: 'Site Search',
     description: '__MSG_extensionDescription__',
     default_locale: 'en',
-    permissions: ['contextMenus', 'storage'],
+    permissions: ['contextMenus', 'storage', 'clipboardWrite'],
+    ...(browser === 'chrome' && { minimum_chrome_version: '157' }),
     // Firefox 専用の設定は Chrome の manifest に含めない
     ...(browser === 'firefox' && {
       browser_specific_settings: {
