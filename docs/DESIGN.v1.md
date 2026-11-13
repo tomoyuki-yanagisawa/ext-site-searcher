@@ -99,7 +99,7 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 - `sites` が未設定の場合は `[]` として扱う。
 - `openIn` が未設定の場合は `"newTab"` として扱う。
 - `openIn` は `"newTab"`（現在のタブの右隣）または `"currentTab"`（現在のタブ）を取る。
-- メニューIDは `site-index-0`、`site-index-1` のように配列のインデックスを使用する。
+- メニューIDには配列のインデックスとサイトの名前・URLを含める。クリック時に最新の設定と照合し、設定変更前の項目が別のサイトを指さないようにする。
 - 親メニューは `site-search`、設定項目は `site-search-options`、区切り線は `site-search-separator` とする。
 - 同期やサーバーへの送信は行わない（検索時の検索語は検索先サイトに渡される）。
 
