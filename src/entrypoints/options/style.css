@@ -61,6 +61,22 @@ legend {
   font-weight: 600;
 }
 
+form > fieldset + fieldset {
+  margin-top: 16px;
+}
+
+fieldset label {
+  display: block;
+}
+
+fieldset label + label {
+  margin-top: 4px;
+}
+
+fieldset input[type="radio"] {
+  margin: 0 6px 0 0;
+}
+
 fieldset > p {
   margin: 0 0 10px;
   color: GrayText;
@@ -87,7 +103,7 @@ code {
   align-items: center;
 }
 
-input {
+input[type="text"] {
   width: 100%;
   min-width: 0;
   padding: 3px 6px;

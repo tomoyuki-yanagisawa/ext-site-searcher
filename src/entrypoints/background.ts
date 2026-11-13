@@ -9,6 +9,11 @@ interface Site {
   url: string;
 }
 
+type OpenIn = 'newTab' | 'currentTab';
+
+const OPEN_IN_KEY = 'openIn';
+const DEFAULT_OPEN_IN: OpenIn = 'newTab';
+
 type MenuItem = Browser.contextMenus.CreateProperties;
 
 let menuUpdateQueue: Promise<void> = Promise.resolve();
@@ -24,6 +29,11 @@ function isSite(value: unknown): value is Site {
 async function getSites(): Promise<Site[]> {
   const { sites } = await browser.storage.local.get('sites');
   return Array.isArray(sites) ? sites.filter(isSite) : [];
+}
+
+async function getOpenIn(): Promise<OpenIn> {
+  const { [OPEN_IN_KEY]: openIn } = await browser.storage.local.get(OPEN_IN_KEY);
+  return openIn === 'currentTab' ? 'currentTab' : DEFAULT_OPEN_IN;
 }
 
 /**
@@ -96,7 +106,7 @@ export default defineBackground(() => {
     }
   });
 
-  browser.contextMenus.onClicked.addListener(async (info) => {
+  browser.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === MENU_OPTIONS_ID) {
       await browser.runtime.openOptionsPage();
       return;
@@ -120,6 +130,16 @@ export default defineBackground(() => {
     const url = site.url
       .split('{query}')
       .join(encodeURIComponent(info.selectionText));
-    await browser.tabs.create({ url });
+
+    if ((await getOpenIn()) === 'currentTab' && tab?.id !== undefined) {
+      await browser.tabs.update(tab.id, { url });
+      return;
+    }
+
+    // 現在のタブの右隣に開く
+    await browser.tabs.create({
+      url,
+      index: tab ? tab.index + 1 : undefined,
+    });
   });
 });

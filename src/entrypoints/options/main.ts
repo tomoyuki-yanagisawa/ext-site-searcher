@@ -2,12 +2,20 @@ import { browser } from 'wxt/browser';
 import './style.css';
 
 const STORAGE_KEY = 'sites';
+const OPEN_IN_KEY = 'openIn';
 const QUERY_PLACEHOLDER = '{query}';
 const TEST_QUERY = 'test';
+
+type OpenIn = 'newTab' | 'currentTab';
+const DEFAULT_OPEN_IN: OpenIn = 'newTab';
 
 interface Site {
   name: string;
   url: string;
+}
+
+function isOpenIn(value: unknown): value is OpenIn {
+  return value === 'newTab' || value === 'currentTab';
 }
 
 function isSite(value: unknown): value is Site {
@@ -100,9 +108,19 @@ function validateSite(site: Site): string | null {
   return null;
 }
 
-async function loadSites(): Promise<void> {
-  const { [STORAGE_KEY]: sites } = await browser.storage.local.get(STORAGE_KEY);
+async function loadSettings(): Promise<void> {
+  const { [STORAGE_KEY]: sites, [OPEN_IN_KEY]: openIn } = await browser.storage.local.get([
+    STORAGE_KEY,
+    OPEN_IN_KEY,
+  ]);
   const list = Array.isArray(sites) ? sites.filter(isSite) : [];
+  const openInValue = isOpenIn(openIn) ? openIn : DEFAULT_OPEN_IN;
+  const openInInput = form.querySelector<HTMLInputElement>(
+    `input[name="openIn"][value="${openInValue}"]`,
+  );
+  if (openInInput) {
+    openInInput.checked = true;
+  }
 
   sitesContainer.replaceChildren();
   list.forEach((site) => appendRow(site));
@@ -131,7 +149,14 @@ form.addEventListener('submit', async (event) => {
   }
 
   try {
-    await browser.storage.local.set({ [STORAGE_KEY]: sites });
+    const openInSelected = form.querySelector<HTMLInputElement>(
+      'input[name="openIn"]:checked',
+    );
+    const openIn: OpenIn = openInSelected?.value === 'currentTab' ? 'currentTab' : 'newTab';
+    await browser.storage.local.set({
+      [STORAGE_KEY]: sites,
+      [OPEN_IN_KEY]: openIn,
+    });
     showMessage('保存しました。');
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -160,7 +185,7 @@ sitesContainer.addEventListener('click', (event) => {
   updateEmptyState();
 });
 
-loadSites().catch((error: unknown) => {
+loadSettings().catch((error: unknown) => {
   const detail = error instanceof Error ? error.message : String(error);
   showMessage(`設定の読み込みに失敗しました: ${detail}`, true);
 });
