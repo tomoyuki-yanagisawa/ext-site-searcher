@@ -9,6 +9,14 @@ interface Site {
   url: string;
 }
 
+function isSite(value: unknown): value is Site {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const site = value as Record<string, unknown>;
+  return typeof site.name === 'string' && typeof site.url === 'string';
+}
+
 const form = document.querySelector<HTMLFormElement>('#site-form')!;
 const sitesContainer = document.querySelector<HTMLElement>('#sites')!;
 const addButton = document.querySelector<HTMLButtonElement>('#add')!;
@@ -67,7 +75,7 @@ function validateSite(site: Site): string | null {
     return `検索URLには ${QUERY_PLACEHOLDER} を含めてください。`;
   }
 
-  let parsedUrl;
+  let parsedUrl: URL;
   try {
     parsedUrl = new URL(
       url.split(QUERY_PLACEHOLDER).join(encodeURIComponent(TEST_QUERY)),
@@ -85,10 +93,10 @@ function validateSite(site: Site): string | null {
 
 async function loadSites(): Promise<void> {
   const { [STORAGE_KEY]: sites } = await browser.storage.local.get(STORAGE_KEY);
-  const list: Site[] = Array.isArray(sites) ? sites : [];
+  const list = Array.isArray(sites) ? sites.filter(isSite) : [];
 
   sitesContainer.replaceChildren();
-  list.forEach(appendRow);
+  list.forEach((site) => appendRow(site));
 }
 
 form.addEventListener('submit', async (event) => {
