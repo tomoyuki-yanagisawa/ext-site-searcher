@@ -20,12 +20,15 @@ Webページ上で選択した文字列を、右クリックメニューから�
 .
 ├── src/
 │   ├── assets/icon.svg
-│   └── entrypoints/
-│       ├── background.ts
-│       └── options/
-│           ├── index.html
-│           ├── main.ts
-│           └── style.css
+│   ├── entrypoints/
+│   │   ├── background.ts
+│   │   └── options/
+│   │       ├── index.html
+│   │       ├── main.ts
+│   │       └── style.css
+│   └── utils/     # 設定と検索 URL の共通処理
+├── tests/         # 単体・連携テスト
+├── .github/       # CI とリリース判定スクリプト
 ├── dist/          # ビルド成果物（gitignore）
 ├── .wxt/          # 型定義キャッシュ（gitignore）
 ├── docs/
@@ -36,15 +39,19 @@ Webページ上で選択した文字列を、右クリックメニューから�
 
 ## インストール
 
-ストアでは配布していません。GitHub Actions のビルド成果物を使うか、手元でビルドします。
+ストアでは配布していません。GitHub Releases や Actions のビルド成果物を使うか、手元でビルドします。
 
 ### ビルド済みパッケージを使う
+
+安定版は [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) からダウンロードできます。Chrome 用・Firefox 用の zip と、署名済みの Firefox 用 XPI が添付されています。
+
+Actions の成果物を使う場合は次の手順です。
 
 1. GitHub の [Actions](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/actions) で最新の `CI` を開く
 2. Artifacts の `site-search-chrome-zip` または `site-search-firefox-zip` をダウンロードする
 3. Chrome は zip を展開して使う。Firefox は zip のまま読み込める
 
-バージョンを上げて `main` にマージすると [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) が自動作成されます。署名用のシークレットを設定していれば、AMO で署名済みの `site-search-<version>-firefox-signed.xpi` も添付されます（後述）。
+バージョンを上げて `main` にマージすると Release が自動作成されます。署名用のシークレットが必要です（後述）。
 
 ### 自分でビルドする
 
@@ -123,7 +130,7 @@ gh secret set AMO_JWT_SECRET
 ```sh
 npm version patch --no-git-tag-version
 git add package.json package-lock.json
-git commit -m "chore: release 0.1.2"
+git commit -m "chore: bump version"
 ```
 
 `package.json` の version がすでにリリース済みの場合、ビルドと Artifacts のみ行われ、署名と Release はスキップされます。AMO は同じバージョンを再署名できないため、修正版は必ずバージョンを上げてください。
@@ -137,6 +144,7 @@ git commit -m "chore: release 0.1.2"
 ### 手元で署名する
 
 ```sh
+npm run build -- -b firefox  # 署名対象の dist/firefox-mv3 を作成
 export WEB_EXT_API_KEY='user:12345:678'
 export WEB_EXT_API_SECRET='...'
 npm run sign:firefox
