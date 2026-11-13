@@ -37,7 +37,7 @@ async function rebuildMenus(): Promise<void> {
   await browser.contextMenus.removeAll();
   await createMenuItem({
     id: MENU_ROOT_ID,
-    title: 'サイトで検索',
+    title: browser.i18n.getMessage('menuSearch'),
     contexts: ['selection'],
   });
 
@@ -62,7 +62,7 @@ async function rebuildMenus(): Promise<void> {
   await createMenuItem({
     id: MENU_OPTIONS_ID,
     parentId: MENU_ROOT_ID,
-    title: '検索サイトを設定…',
+    title: browser.i18n.getMessage('menuSettings'),
     contexts: ['selection'],
   });
 }

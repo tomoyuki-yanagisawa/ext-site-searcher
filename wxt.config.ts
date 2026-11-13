@@ -13,7 +13,8 @@ export default defineConfig({
   },
   manifest: ({ browser }) => ({
     name: 'Site Search',
-    description: '選択した文字列を登録したサイトで検索',
+    description: '__MSG_extensionDescription__',
+    default_locale: 'en',
     permissions: ['contextMenus', 'storage'],
     // Firefox 専用の設定は Chrome の manifest に含めない
     ...(browser === 'firefox' && {
