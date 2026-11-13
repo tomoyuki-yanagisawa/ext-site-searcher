@@ -4,7 +4,7 @@
 
 Webページ上で選択した文字列を、右クリックメニューから任意のサイトで検索するChrome・Firefox共通のブラウザ拡張機能。
 
-検索先は設定画面で自由に追加・編集・削除でき、検索結果は新しいタブで開く。
+検索先は設定画面で自由に追加・編集・削除でき、検索結果は現在のタブまたは右隣の新しいタブで開く。
 
 ## 2. 技術方針
 
@@ -16,9 +16,9 @@ Webページ上で選択した文字列を、右クリックメニューから�
 | Manifest | V3（両ブラウザ共通） |
 | パッケージ管理 | npm |
 | 保存先 | `browser.storage.local` |
-| 開発依存 | WXT、TypeScript、@wxt-dev/auto-icons、web-ext |
+| 開発依存 | WXT、TypeScript、@wxt-dev/auto-icons、web-ext、Vitest |
 
-React、Content Script、テストフレームワーク、独自の抽象化層は使わない。
+React や Content Script は使わず、必要な共通処理は小さなユーティリティとして実装する。
 
 ## 3. 機能
 
@@ -110,18 +110,25 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 ├── src/
 │   ├── assets/
 │   │   └── icon.svg
-│   └── entrypoints/
-│       ├── background.ts
-│       └── options/
-│           ├── index.html
-│           ├── main.ts
-│           └── style.css
+│   ├── entrypoints/
+│   │   ├── background.ts
+│   │   └── options/
+│   │       ├── index.html
+│   │       ├── main.ts
+│   │       └── style.css
+│   └── utils/
+│       ├── search-url.ts
+│       └── settings.ts
+├── tests/
+├── .github/
+│   ├── scripts/check-release.mjs
+│   └── workflows/build.yml
 ├── tsconfig.json
 ├── wxt.config.ts
 └── package.json
 ```
 
-手書きのコードは**7ファイル**のみ。ソースは `src/`、ビルド成果物は `dist/`、型定義キャッシュは `.wxt/` に出力される（`dist/` と `.wxt/` はコミットしない）。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時にPNG（16/32/48/96/128）を生成する。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
+ソースは `src/`、テストは `tests/` に置く。ビルド成果物は `dist/`、型定義キャッシュは `.wxt/` に出力される（`dist/` と `.wxt/` はコミットしない）。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時にPNG（16/32/48/96/128）を生成する。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
 
 | ファイル | 役割 |
 |---|---|
@@ -129,6 +136,10 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 | `src/entrypoints/options/index.html` | 設定画面のマークアップ |
 | `src/entrypoints/options/main.ts` | 追加・編集・削除・バリデーション・保存 |
 | `src/entrypoints/options/style.css` | 設定画面のスタイル（OS / ブラウザ標準に寄せる） |
+| `src/utils/search-url.ts` | 検索URLの検証と生成 |
+| `src/utils/settings.ts` | 設定の型・読み書きと既定値 |
+| `tests/` | 単体・連携テスト |
+| `.github/` | CI ワークフローと Release 判定スクリプト |
 | `src/assets/icon.svg` | 拡張機能アイコンの元データ（ビルド時にPNG生成） |
 | `tsconfig.json` | TypeScript の型検査設定 |
 | `wxt.config.ts` | Manifest V3、名前、権限、アイコン生成 |
@@ -150,71 +161,11 @@ WXTの `browser` APIを使い、Chrome・Firefox固有の分岐は書かない�
 
 ### `wxt.config.ts`
 
-```ts
-/// <reference types="@wxt-dev/auto-icons" />
-import { defineConfig } from 'wxt';
-
-export default defineConfig({
-  srcDir: 'src',
-  outDir: 'dist',
-  manifestVersion: 3,
-  modules: ['@wxt-dev/auto-icons'],
-  autoIcons: {
-    // Chrome は SVG アイコンを manifest で扱えないため、ビルド時に PNG を生成する
-    baseIconPath: 'assets/icon.svg',
-    sizes: [128, 96, 48, 32, 16],
-  },
-  manifest: ({ browser }) => ({
-    name: 'Site Search',
-    description: '選択した文字列を登録したサイトで検索',
-    permissions: ['contextMenus', 'storage'],
-    // Firefox 専用の設定は Chrome の manifest に含めない
-    ...(browser === 'firefox' && {
-      browser_specific_settings: {
-        gecko: {
-          id: 'site-search@tomoyuki-yanagisawa.github.io',
-          // Windows 7 で使える最後の Firefox は 115 ESR のため下限を 115 にする
-          strict_min_version: '115.0',
-          data_collection_permissions: {
-            // 選択文字列を検索語として外部サイトへ送信する。140 未満の Firefox では無視される
-            required: ['searchTerms'],
-          },
-        },
-      },
-    }),
-  }),
-});
-```
-
-`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
+現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
 
 ### `package.json`
 
-```json
-{
-  "name": "site-search",
-  "version": "0.1.3",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "wxt",
-    "build": "wxt build",
-    "zip": "wxt zip",
-    "zip:firefox": "wxt zip -b firefox",
-    "sign:firefox": "web-ext sign --channel=unlisted --source-dir dist/firefox-mv3 --artifacts-dir dist/amo",
-    "typecheck": "tsc --noEmit",
-    "postinstall": "wxt prepare"
-  },
-  "devDependencies": {
-    "@wxt-dev/auto-icons": "^1.1.2",
-    "typescript": "^7.0.2",
-    "web-ext": "^10.8.0",
-    "wxt": "^0.21.0"
-  }
-}
-```
-
-`postinstall` で `wxt prepare` を実行し、`.wxt/` に型定義を生成する。実装時に利用するWXTの互換バージョンを確認し、`package-lock.json` をコミットする。
+現在のスクリプトと依存関係は [`package.json`](../package.json) を参照する。`postinstall` で `wxt prepare` を実行し、`.wxt/` に型定義を生成する。`package-lock.json` をコミットする。
 
 ## 8. 開発コマンド
 
@@ -228,11 +179,12 @@ npm run zip                  # Chrome 用 zip
 npm run zip:firefox          # Firefox 用 zip
 npm run sign:firefox         # AMO で署名（要 API キー）
 npm run typecheck            # 型検査
+npm test                     # 単体・連携テスト
 ```
 
 成果物は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、配布用 zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に生成される。署名済み XPI は `dist/amo/` に出力される。
 
-GitHub Actions（`.github/workflows/build.yml`）は `test` / `version` / `release` の3ジョブで構成する。PR では `test`（型検査と zip 作成）のみ、`main` では `version` で未リリースか確認し、必要なら `release` が `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` を使って Firefox 用 XPI を署名し、`site-search-<version>-firefox-signed.xpi` にリネームして `v<version>` タグと Release を自動作成する。リリース済みのバージョンでは署名と Release をスキップする。
+GitHub Actions（`.github/workflows/build.yml`）は `test` / `version` / `release` の3ジョブで構成する。PR では `test`（型検査・テスト・zip 作成）のみ、`main` では `version` で未リリースか確認し、必要なら `release` が `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` を使って Firefox 用 XPI を署名し、`site-search-<version>-firefox-signed.xpi` にリネームして `v<version>` タグと Release を自動作成する。リリース済みのバージョンでは署名と Release をスキップする。
 
 ## 9. 完了条件
 
@@ -248,7 +200,7 @@ Chrome と Firefox（Windows 7 では 115 ESR）で以下を手動確認する�
 
 ## 10. 実装原則
 
-小さな関数で実装し、Repository/Service層、クラス、共通ユーティリティ、追加のパッケージは作らない。規模が大きくなってから必要なものだけ追加する。
+小さな関数で実装し、共通処理やパッケージは必要なものだけ追加する。不要な抽象化は避ける。
 
 ## 参考
 
