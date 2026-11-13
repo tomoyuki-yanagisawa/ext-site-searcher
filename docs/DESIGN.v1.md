@@ -97,26 +97,27 @@ React、Content Script、テストフレームワーク、独自の抽象化層�
 
 ```text
 site-search/
-├── assets/
-│   └── icon.svg
-├── entrypoints/
-│   ├── background.ts
-│   └── options/
-│       ├── index.html
-│       └── main.ts
+├── src/
+│   ├── assets/
+│   │   └── icon.svg
+│   └── entrypoints/
+│       ├── background.ts
+│       └── options/
+│           ├── index.html
+│           └── main.ts
 ├── tsconfig.json
 ├── wxt.config.ts
 └── package.json
 ```
 
-手書きのコードは**6ファイル**のみ。アイコンは `assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時にPNG（16/32/48/96/128）を生成する。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
+手書きのコードは**6ファイル**のみ。ソースは `src/`、ビルド成果物は `dist/`、型定義キャッシュは `.wxt/` に出力される（`dist/` と `.wxt/` はコミットしない）。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時にPNG（16/32/48/96/128）を生成する。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
 
 | ファイル | 役割 |
 |---|---|
-| `background.ts` | メニュー作成、検索処理、設定変更の反映 |
-| `options/index.html` | 設定画面のマークアップとCSS |
-| `options/main.ts` | 追加・編集・削除・バリデーション・保存 |
-| `assets/icon.svg` | 拡張機能アイコンの元データ（ビルド時にPNG生成） |
+| `src/entrypoints/background.ts` | メニュー作成、検索処理、設定変更の反映 |
+| `src/entrypoints/options/index.html` | 設定画面のマークアップとCSS |
+| `src/entrypoints/options/main.ts` | 追加・編集・削除・バリデーション・保存 |
+| `src/assets/icon.svg` | 拡張機能アイコンの元データ（ビルド時にPNG生成） |
 | `tsconfig.json` | TypeScript の型検査設定 |
 | `wxt.config.ts` | Manifest V3、名前、権限、アイコン生成 |
 | `package.json` | npm scripts、開発依存 |
@@ -142,6 +143,8 @@ WXTの `browser` APIを使い、Chrome・Firefox固有の分岐は書かない�
 import { defineConfig } from 'wxt';
 
 export default defineConfig({
+  srcDir: 'src',
+  outDir: 'dist',
   manifestVersion: 3,
   modules: ['@wxt-dev/auto-icons'],
   autoIcons: {
@@ -171,7 +174,7 @@ export default defineConfig({
 });
 ```
 
-`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。
+`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
 
 ### `package.json`
 
@@ -186,7 +189,7 @@ export default defineConfig({
     "build": "wxt build",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
-    "sign:firefox": "web-ext sign --channel=unlisted --source-dir .output/firefox-mv3",
+    "sign:firefox": "web-ext sign --channel=unlisted --source-dir dist/firefox-mv3 --artifacts-dir dist/amo",
     "typecheck": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
@@ -215,9 +218,9 @@ npm run sign:firefox         # AMO で署名（要 API キー）
 npm run typecheck            # 型検査
 ```
 
-成果物はWXTの `.output/chrome-mv3/` と `.output/firefox-mv3/` に、配布用 zip は `.output/site-search-*-chrome.zip` と `.output/site-search-*-firefox.zip` に生成される。
+成果物は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、配布用 zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に生成される。署名済み XPI は `dist/amo/` に出力される。
 
-GitHub Actions（`.github/workflows/build.yml`）で型検査と両ブラウザの zip 作成を行い、成果物を Artifacts に保存する。`v*` タグを push すると、`AMO_JWT_ISSUER` / `AMO_JWT_SECRET` を使って Firefox 用 XPI を署名し、zip と一緒に Release に添付する。
+GitHub Actions（`.github/workflows/build.yml`）で型検査と両ブラウザの zip 作成を行い、成果物を Artifacts に保存する。`v*` タグを push すると、`AMO_JWT_ISSUER` / `AMO_JWT_SECRET` を使って Firefox 用 XPI を署名し、`site-search-<version>-firefox-signed.xpi` にリネームして zip と一緒に Release に添付する。
 
 ## 9. 完了条件
 

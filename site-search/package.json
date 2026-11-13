@@ -8,7 +8,7 @@
     "build": "wxt build",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
-    "sign:firefox": "web-ext sign --channel=unlisted --source-dir .output/firefox-mv3",
+    "sign:firefox": "web-ext sign --channel=unlisted --source-dir dist/firefox-mv3 --artifacts-dir dist/amo",
     "typecheck": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
