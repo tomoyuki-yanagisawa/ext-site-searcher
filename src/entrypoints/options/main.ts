@@ -1,30 +1,6 @@
-import { browser } from 'wxt/browser';
+import { getSettings, saveSettings, type Site } from '../../utils/settings';
+import { validateSite } from '../../utils/search-url';
 import './style.css';
-
-const STORAGE_KEY = 'sites';
-const OPEN_IN_KEY = 'openIn';
-const QUERY_PLACEHOLDER = '{query}';
-const TEST_QUERY = 'test';
-
-type OpenIn = 'newTab' | 'currentTab';
-const DEFAULT_OPEN_IN: OpenIn = 'newTab';
-
-interface Site {
-  name: string;
-  url: string;
-}
-
-function isOpenIn(value: unknown): value is OpenIn {
-  return value === 'newTab' || value === 'currentTab';
-}
-
-function isSite(value: unknown): value is Site {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const site = value as Record<string, unknown>;
-  return typeof site.name === 'string' && typeof site.url === 'string';
-}
 
 const form = document.querySelector<HTMLFormElement>('#site-form')!;
 const sitesContainer = document.querySelector<HTMLElement>('#sites')!;
@@ -78,53 +54,19 @@ function appendRow(site?: Site): HTMLLIElement {
   return row;
 }
 
-function validateSite(site: Site): string | null {
-  const name = site.name.trim();
-  const url = site.url.trim();
-
-  if (!name) {
-    return '名前を入力してください。';
-  }
-  if (!url) {
-    return '検索URLを入力してください。';
-  }
-  if (!url.includes(QUERY_PLACEHOLDER)) {
-    return `検索URLには ${QUERY_PLACEHOLDER} を含めてください。`;
-  }
-
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(
-      url.split(QUERY_PLACEHOLDER).join(encodeURIComponent(TEST_QUERY)),
-    );
-  } catch {
-    return '検索URLの形式が正しくありません。';
-  }
-
-  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-    return '検索URLは http:// または https:// で始めてください。';
-  }
-
-  return null;
-}
-
 async function loadSettings(): Promise<void> {
-  const { [STORAGE_KEY]: sites, [OPEN_IN_KEY]: openIn } = await browser.storage.local.get([
-    STORAGE_KEY,
-    OPEN_IN_KEY,
-  ]);
-  const list = Array.isArray(sites) ? sites.filter(isSite) : [];
-  const openInValue = isOpenIn(openIn) ? openIn : DEFAULT_OPEN_IN;
+  const { sites, openIn } = await getSettings();
   const openInInput = form.querySelector<HTMLInputElement>(
-    `input[name="openIn"][value="${openInValue}"]`,
+    `input[name="openIn"][value="${openIn}"]`,
   );
   if (openInInput) {
     openInInput.checked = true;
   }
 
   sitesContainer.replaceChildren();
-  list.forEach((site) => appendRow(site));
+  sites.forEach((site) => appendRow(site));
   updateEmptyState();
+  form.inert = false;
 }
 
 form.addEventListener('submit', async (event) => {
@@ -152,11 +94,8 @@ form.addEventListener('submit', async (event) => {
     const openInSelected = form.querySelector<HTMLInputElement>(
       'input[name="openIn"]:checked',
     );
-    const openIn: OpenIn = openInSelected?.value === 'currentTab' ? 'currentTab' : 'newTab';
-    await browser.storage.local.set({
-      [STORAGE_KEY]: sites,
-      [OPEN_IN_KEY]: openIn,
-    });
+    const openIn = openInSelected?.value === 'currentTab' ? 'currentTab' : 'newTab';
+    await saveSettings({ sites, openIn });
     showMessage('保存しました。');
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -186,6 +125,10 @@ sitesContainer.addEventListener('click', (event) => {
 });
 
 loadSettings().catch((error: unknown) => {
+  form.querySelectorAll('input, button').forEach((element) => {
+    (element as HTMLInputElement | HTMLButtonElement).disabled = true;
+  });
+  form.inert = false;
   const detail = error instanceof Error ? error.message : String(error);
   showMessage(`設定の読み込みに失敗しました: ${detail}`, true);
 });

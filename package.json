@@ -9,12 +9,14 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "sign:firefox": "web-ext sign --channel=unlisted --source-dir dist/firefox-mv3 --artifacts-dir dist/amo",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
     "@wxt-dev/auto-icons": "^1.1.2",
     "typescript": "^7.0.2",
+    "vitest": "^5.1.0",
     "web-ext": "^10.8.0",
     "wxt": "^0.21.0"
   }

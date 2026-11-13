@@ -166,6 +166,7 @@ https://www.google.com/search?q={query}
 npm run dev                  # Chrome で起動
 npm run dev -- -b firefox    # Firefox で起動
 npm run typecheck            # TypeScript の型検査
+npm test                     # 単体テスト
 npm run zip                  # Chrome 用 zip を作成
 npm run zip:firefox          # Firefox 用 zip を作成
 npm run sign:firefox         # AMO で署名（要 API キー）
