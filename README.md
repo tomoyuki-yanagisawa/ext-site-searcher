@@ -17,7 +17,7 @@ Webページ上で選択した文字列を、右クリックメニューから�
 ## 構成
 
 ```text
-site-search/
+.
 ├── src/
 │   ├── assets/icon.svg
 │   └── entrypoints/
@@ -27,6 +27,7 @@ site-search/
 │           └── main.ts
 ├── dist/          # ビルド成果物（gitignore）
 ├── .wxt/          # 型定義キャッシュ（gitignore）
+├── docs/
 ├── package.json
 ├── tsconfig.json
 └── wxt.config.ts
@@ -48,7 +49,7 @@ site-search/
 
 ```sh
 git clone https://github.com/tomoyuki-yanagisawa/ext-site-searcher.git
-cd ext-site-searcher/site-search
+cd ext-site-searcher
 npm install
 ```
 
@@ -114,7 +115,7 @@ gh secret set AMO_JWT_SECRET
 
 ### リリース手順
 
-1. `site-search/package.json` の `version` を上げる
+1. `package.json` の `version` を上げる
 2. `main` にマージする
 3. タグを push する
 
@@ -128,13 +129,12 @@ git push origin v0.1.1
 ### 手元で署名する
 
 ```sh
-cd site-search
 export WEB_EXT_API_KEY='user:12345:678'
 export WEB_EXT_API_SECRET='...'
 npm run sign:firefox
 ```
 
-署名済み `.xpi` は `site-search/dist/amo/` に出力されます。
+署名済み `.xpi` は `dist/amo/` に出力されます。
 
 ## 使い方
 
@@ -155,7 +155,6 @@ https://www.google.com/search?q={query}
 ## 開発
 
 ```sh
-cd site-search
 npm run dev                  # Chrome で起動
 npm run dev -- -b firefox    # Firefox で起動
 npm run typecheck            # TypeScript の型検査
@@ -166,6 +165,6 @@ npm run sign:firefox         # AMO で署名（要 API キー）
 
 `npm install` 時に `wxt prepare` が実行され、型検査に必要な `.wxt/` の型定義が生成されます。
 
-アイコンは `site-search/src/assets/icon.svg` をもとにビルド時に PNG が生成されます（Chrome は manifest のアイコンに SVG を使えないため）。リポジトリには SVG のみをコミットします。
+アイコンは `src/assets/icon.svg` をもとにビルド時に PNG が生成されます（Chrome は manifest のアイコンに SVG を使えないため）。リポジトリには SVG のみをコミットします。
 
 `dist/` と `.wxt/` はビルド生成物のためコミットしません。`.wxt/` は型定義と `tsconfig` の生成キャッシュです。

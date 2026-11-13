@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>検索サイトの設定 - Site Search</title>
+    <!-- Chrome / Firefox の埋め込みダイアログではなく、タブで開く -->
+    <meta name="manifest.open_in_tab" content="true" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5f6f8;
+        --surface: #ffffff;
+        --field: #ffffff;
+        --text: #1f2328;
+        --muted: #6b7280;
+        --border: #e2e5ea;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --primary-soft: #eff4ff;
+        --danger: #dc2626;
+        --danger-soft: #fef2f2;
+        --focus: rgba(37, 99, 235, 0.3);
+        --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px rgba(16, 24, 40, 0.06);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1115;
+          --surface: #171a21;
+          --field: #101319;
+          --text: #e6e8eb;
+          --muted: #9ca3af;
+          --border: #2a2f3a;
+          --primary: #3b82f6;
+          --primary-hover: #60a5fa;
+          --primary-soft: #17233b;
+          --danger: #f87171;
+          --danger-soft: #2a1718;
+          --focus: rgba(96, 165, 250, 0.4);
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .app {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 40px 24px 64px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .brand svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .page-header {
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 10px 0 6px;
+        font-size: 26px;
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+      }
+
+      .lead {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .card {
+        padding: 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+      }
+
+      .card-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      code {
+        padding: 1px 4px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+      }
+
+      .column-labels,
+      .site-row {
+        display: grid;
+        grid-template-columns: minmax(140px, 1fr) minmax(260px, 2.5fr) auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .column-labels {
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .sites {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .site-row input {
+        width: 100%;
+        min-width: 0;
+        padding: 10px 12px;
+        background: var(--field);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: inherit;
+        font: inherit;
+      }
+
+      .site-row input::placeholder {
+        color: var(--muted);
+      }
+
+      .site-row input:focus-visible {
+        border-color: var(--primary);
+        outline: 2px solid var(--focus);
+        outline-offset: 1px;
+      }
+
+      button {
+        padding: 9px 12px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+
+      .delete {
+        border-color: var(--border);
+        color: var(--danger);
+      }
+
+      .delete:hover {
+        background: var(--danger-soft);
+        border-color: currentColor;
+      }
+
+      .empty {
+        margin: 0 0 12px;
+        padding: 28px 16px;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .empty[hidden] {
+        display: none;
+      }
+
+      .add {
+        width: 100%;
+        margin-top: 12px;
+        border: 1px dashed var(--border);
+        color: var(--primary);
+      }
+
+      .add:hover {
+        border-color: var(--primary);
+        background: var(--primary-soft);
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 20px;
+      }
+
+      #message {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      #message.error {
+        color: var(--danger);
+      }
+
+      .primary {
+        margin-left: auto;
+        padding: 10px 22px;
+        background: var(--primary);
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .primary:hover {
+        background: var(--primary-hover);
+      }
+
+      @media (max-width: 640px) {
+        .app {
+          padding: 28px 16px 48px;
+        }
+
+        h1 {
+          font-size: 22px;
+        }
+
+        .card-header {
+          display: block;
+        }
+
+        .hint {
+          margin-top: 4px;
+        }
+
+        .column-labels {
+          display: none;
+        }
+
+        .site-row {
+          grid-template-columns: 1fr auto;
+        }
+
+        .site-row input[name="name"] {
+          grid-column: 1;
+          grid-row: 1;
+        }
+
+        .site-row input[name="url"] {
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+
+        .delete {
+          grid-column: 2;
+          grid-row: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="page-header">
+        <div class="brand">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M15 15l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          Site Search
+        </div>
+        <h1>検索サイトの設定</h1>
+        <p class="lead">右クリックメニューから検索するサイトを登録します。</p>
+      </header>
+
+      <form id="site-form" novalidate>
+        <section class="card" aria-labelledby="sites-heading">
+          <div class="card-header">
+            <h2 id="sites-heading">検索サイト</h2>
+            <p class="hint"><code>{query}</code> は選択した文字列に置き換わります。</p>
+          </div>
+
+          <div class="column-labels" aria-hidden="true">
+            <span>名前</span>
+            <span>検索URL</span>
+            <span></span>
+          </div>
+
+          <div id="sites" class="sites"></div>
+
+          <p id="empty" class="empty">
+            まだ検索サイトが登録されていません。「サイトを追加」から登録してください。
+          </p>
+
+          <button id="add" type="button" class="add">＋ サイトを追加</button>
+        </section>
+
+        <div class="actions">
+          <p id="message" role="status" aria-live="polite"></p>
+          <button type="submit" class="primary">保存</button>
+        </div>
+      </form>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

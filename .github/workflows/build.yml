@@ -17,9 +17,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: site-search
     steps:
       - uses: actions/checkout@v7
 
@@ -27,7 +24,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: site-search/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - run: npm ci
       - run: npm run typecheck
@@ -56,14 +53,14 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: site-search-chrome
-          path: site-search/dist/*chrome*.zip
+          path: dist/*chrome*.zip
           if-no-files-found: error
 
       - name: Upload Firefox artifact
         uses: actions/upload-artifact@v7
         with:
           name: site-search-firefox
-          path: site-search/dist/*firefox*.zip
+          path: dist/*firefox*.zip
           if-no-files-found: error
 
       - name: Upload signed Firefox artifact
@@ -71,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: site-search-firefox-signed
-          path: site-search/dist/*-firefox-signed.xpi
+          path: dist/*-firefox-signed.xpi
           if-no-files-found: error
 
       - name: Attach files to release
@@ -79,6 +76,6 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            site-search/dist/*chrome*.zip
-            site-search/dist/*firefox*.zip
-            site-search/dist/*-firefox-signed.xpi
+            dist/*chrome*.zip
+            dist/*firefox*.zip
+            dist/*-firefox-signed.xpi
