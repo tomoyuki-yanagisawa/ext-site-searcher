@@ -160,9 +160,10 @@ React や Content Script は使わず、必要な共通処理は小さなユー�
 5. 最新の `sites` から対象URLを取得し、`{query}` をURLエンコード済みの選択文字列で置換する。
    `copyQuery` が有効な場合は、エンコード前の選択文字列をクリップボードに書き込む。書き込みが失敗しても検索を続ける。
 6. `openIn` が `"currentTab"` なら `browser.tabs.update()`、`"newTab"` なら `browser.tabs.create({ index: 現在のタブ + 1 })` で検索結果を開く。
+   Firefox で `button === 1` の場合は設定にかかわらず右隣のバックグラウンドタブで開く（実機でのミドルクリック動作は未検証）。
 7. 設定項目のクリックでは `browser.runtime.openOptionsPage()` を使う。
 
-WXTの `browser` APIを使い、Chrome・Firefox固有の分岐は書かない。FirefoxのMV3バックグラウンド形式の違いはWXTに任せる。
+WXTの `browser` APIを使い、ミドルクリックの判定は Firefox に限る。FirefoxのMV3バックグラウンド形式の違いはWXTに任せる。
 
 ## 7. 設定
 

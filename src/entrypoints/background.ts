@@ -115,7 +115,9 @@ export default defineBackground(() => {
       }
     }
 
-    if (openIn === 'currentTab' && tab?.id !== undefined) {
+    // Firefox exposes the mouse button for context menu clicks; Chrome does not.
+    const background = import.meta.env.BROWSER === 'firefox' && (info as typeof info & { button?: number }).button === 1;
+    if (!background && openIn === 'currentTab' && tab?.id !== undefined) {
       await browser.tabs.update(tab.id, { url });
       return;
     }
@@ -125,6 +127,7 @@ export default defineBackground(() => {
       url,
       windowId: tab?.windowId,
       index: tab ? tab.index + 1 : undefined,
+      ...(background ? { active: false } : {}),
     });
   });
 });
