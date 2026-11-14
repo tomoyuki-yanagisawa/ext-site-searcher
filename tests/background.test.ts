@@ -53,9 +53,7 @@ describe('background menus', () => {
     vi.stubGlobal('navigator', { clipboard: { writeText } });
     vi.stubGlobal('defineBackground', (callback: () => void) => ({ main: callback }));
     vi.doMock('wxt/browser', () => ({ browser }));
-    const background = await import('../src/entrypoints/background');
-    background.default.main();
-    await startup();
+    await startBrowser('firefox');
   });
 
   afterEach(() => {
@@ -70,9 +68,25 @@ describe('background menus', () => {
     return menu.id;
   }
 
+  async function startBrowser(name: string): Promise<void> {
+    vi.stubEnv('BROWSER', name);
+    vi.resetModules();
+    const background = await import('../src/entrypoints/background');
+    background.default.main();
+    await startup();
+  }
+
   it('uses translated messages for built-in menu titles', () => {
     expect(menuId('menuSearch')).toBe('site-search');
     expect(menuId('menuSettings')).toBe('site-search-options');
+  });
+
+  it('creates distinct menu IDs for duplicate sites', async () => {
+    sites = [google, google];
+    await startup();
+    const ids = menus.filter((menu) => menu.title === 'Google').map((menu) => menu.id);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
   });
 
   it('supports Firefox link text and copies the search query', async () => {
@@ -89,11 +103,7 @@ describe('background menus', () => {
   });
 
   it('ignores link text in Chrome', async () => {
-    vi.stubEnv('BROWSER', 'chrome');
-    vi.resetModules();
-    const background = await import('../src/entrypoints/background');
-    background.default.main();
-    await startup();
+    await startBrowser('chrome');
     expect(menus.every((menu) => !menu.contexts?.includes('link'))).toBe(true);
     await click({ menuItemId: menuId('Google'), linkText: 'link' });
     expect(createTab).not.toHaveBeenCalled();
@@ -134,11 +144,7 @@ describe('background menus', () => {
   });
 
   it.each(['firefox', 'chrome'])('opens in a background tab when configured (%s)', async (browserName) => {
-    vi.stubEnv('BROWSER', browserName);
-    vi.resetModules();
-    const background = await import('../src/entrypoints/background');
-    background.default.main();
-    await startup();
+    await startBrowser(browserName);
     openIn = 'backgroundTab';
     await click({ menuItemId: menuId('Other'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
     expect(createTab).toHaveBeenCalledWith({ url: 'https://example.com/?q=test', index: 3, windowId: 8, active: false });
@@ -153,11 +159,7 @@ describe('background menus', () => {
   });
 
   it('does not apply the Firefox shortcut in Chrome', async () => {
-    vi.stubEnv('BROWSER', 'chrome');
-    vi.resetModules();
-    const background = await import('../src/entrypoints/background');
-    background.default.main();
-    await startup();
+    await startBrowser('chrome');
     openIn = 'currentTab';
     await click({ menuItemId: menuId('Other'), selectionText: 'test', button: 1 }, { id: 5, index: 2, windowId: 8 });
     expect(updateTab).toHaveBeenCalledWith(5, { url: 'https://example.com/?q=test' });
