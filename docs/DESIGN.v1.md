@@ -144,6 +144,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 │   │       ├── main.ts
 │   │       └── style.css
 │   └── utils/
+│       ├── feature.ts
 │       ├── search-url.ts
 │       └── settings.ts
 ├── tests/
@@ -165,6 +166,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 | `src/entrypoints/options/main.ts` | 追加・編集・削除・バリデーション・保存 |
 | `src/entrypoints/options/style.css` | 設定画面のスタイル（OS / ブラウザ標準に寄せる） |
 | `src/utils/search-url.ts` | 検索URLの検証と生成 |
+| `src/utils/feature.ts` | ビルド対象ブラウザに基づく機能対応フラグ |
 | `src/utils/settings.ts` | 設定の型・読み書きと既定値 |
 | `tests/` | 単体・連携テスト |
 | `.github/` | CI ワークフローと Release 判定スクリプト |
