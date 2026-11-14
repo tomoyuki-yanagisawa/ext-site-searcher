@@ -1,6 +1,7 @@
 import type { Browser } from 'wxt/browser';
 import { getSettings, type Site } from '../utils/settings';
 import { searchUrl } from '../utils/search-url';
+import { supportsLinkText, supportsMenuClickButton } from '../utils/feature';
 
 const MENU_ROOT_ID = 'site-search';
 const MENU_OPTIONS_ID = 'site-search-options';
@@ -33,7 +34,7 @@ function createMenuItem(item: MenuItem): Promise<void> {
 
 async function rebuildMenus(): Promise<void> {
   const { sites } = await getSettings();
-  const contexts: MenuItem['contexts'] = import.meta.env.BROWSER === 'firefox' ? ['selection', 'link'] : ['selection'];
+  const contexts: MenuItem['contexts'] = supportsLinkText ? ['selection', 'link'] : ['selection'];
 
   await browser.contextMenus.removeAll();
   await createMenuItem({
@@ -102,7 +103,7 @@ export default defineBackground(() => {
 
     const { sites, openIn, copyQuery } = await getSettings();
     const site = sites.find((item) => siteIdentity(item) === match[1]);
-    const query = info.selectionText || (import.meta.env.BROWSER === 'firefox' ? (info as typeof info & { linkText?: string }).linkText : undefined);
+    const query = info.selectionText || (supportsLinkText ? (info as typeof info & { linkText?: string }).linkText : undefined);
     if (!site || !query) {
       return;
     }
@@ -117,8 +118,7 @@ export default defineBackground(() => {
       }
     }
 
-    // Firefox exposes the mouse button for context menu clicks; Chrome does not.
-    const background = import.meta.env.BROWSER === 'firefox' && (info as typeof info & { button?: number }).button === 1;
+    const background = supportsMenuClickButton && (info as typeof info & { button?: number }).button === 1;
     if (!background && openIn === 'currentTab' && tab?.id !== undefined) {
       await browser.tabs.update(tab.id, { url });
       return;

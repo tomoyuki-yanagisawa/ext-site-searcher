@@ -90,6 +90,9 @@ describe('background menus', () => {
 
   it('ignores link text in Chrome', async () => {
     vi.stubEnv('BROWSER', 'chrome');
+    vi.resetModules();
+    const background = await import('../src/entrypoints/background');
+    background.default.main();
     await startup();
     expect(menus.every((menu) => !menu.contexts?.includes('link'))).toBe(true);
     await click({ menuItemId: menuId('Google'), linkText: 'link' });
@@ -139,6 +142,10 @@ describe('background menus', () => {
 
   it('does not apply the Firefox shortcut in Chrome', async () => {
     vi.stubEnv('BROWSER', 'chrome');
+    vi.resetModules();
+    const background = await import('../src/entrypoints/background');
+    background.default.main();
+    await startup();
     openIn = 'currentTab';
     await click({ menuItemId: menuId('Other'), selectionText: 'test', button: 1 }, { id: 5, index: 2, windowId: 8 });
     expect(updateTab).toHaveBeenCalledWith(5, { url: 'https://example.com/?q=test' });
