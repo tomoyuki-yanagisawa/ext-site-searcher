@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type Menu = { id: string; title?: string };
-type Click = (info: { menuItemId: string | number; selectionText?: string }, tab?: { id?: number; index: number; windowId: number }) => Promise<void>;
+type Click = (info: { menuItemId: string | number; selectionText?: string; button?: number }, tab?: { id?: number; index: number; windowId: number }) => Promise<void>;
 
 const google = { name: 'Google', url: 'https://google.com/search?q={query}' };
 const other = { name: 'Other', url: 'https://example.com/?q={query}' };
@@ -21,6 +21,7 @@ describe('background menus', () => {
 
   beforeEach(async () => {
     vi.resetModules();
+    vi.stubEnv('BROWSER', 'firefox');
     sites = [google, other];
     openIn = 'newTab';
     copyQuery = false;
@@ -59,6 +60,7 @@ describe('background menus', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
     vi.doUnmock('wxt/browser');
   });
 
@@ -103,6 +105,21 @@ describe('background menus', () => {
   it('opens in the current tab when configured', async () => {
     openIn = 'currentTab';
     await click({ menuItemId: menuId('Other'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
+    expect(updateTab).toHaveBeenCalledWith(5, { url: 'https://example.com/?q=test' });
+    expect(createTab).not.toHaveBeenCalled();
+  });
+
+  it('opens Firefox middle clicks in a background tab regardless of the setting', async () => {
+    openIn = 'currentTab';
+    await click({ menuItemId: menuId('Other'), selectionText: 'test', button: 1 }, { id: 5, index: 2, windowId: 8 });
+    expect(createTab).toHaveBeenCalledWith({ url: 'https://example.com/?q=test', index: 3, windowId: 8, active: false });
+    expect(updateTab).not.toHaveBeenCalled();
+  });
+
+  it('does not apply the Firefox shortcut in Chrome', async () => {
+    vi.stubEnv('BROWSER', 'chrome');
+    openIn = 'currentTab';
+    await click({ menuItemId: menuId('Other'), selectionText: 'test', button: 1 }, { id: 5, index: 2, windowId: 8 });
     expect(updateTab).toHaveBeenCalledWith(5, { url: 'https://example.com/?q=test' });
     expect(createTab).not.toHaveBeenCalled();
   });
