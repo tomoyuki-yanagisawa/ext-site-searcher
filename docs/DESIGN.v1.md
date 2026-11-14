@@ -152,6 +152,8 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 │       └── settings.ts
 ├── tests/
 ├── public/_locales/
+├── config/
+│   └── chrome-extension-key.pub
 ├── .github/
 │   ├── scripts/check-release.mjs
 │   └── workflows/build.yml
@@ -172,6 +174,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 | `src/utils/feature.ts` | ビルド対象ブラウザに基づく機能対応フラグ |
 | `src/utils/settings.ts` | 設定の型・読み書きと既定値 |
 | `tests/` | 単体・連携テスト |
+| `config/chrome-extension-key.pub` | Chrome の拡張機能 ID を固定する公開鍵（Base64） |
 | `.github/` | CI ワークフローと Release 判定スクリプト |
 | `src/assets/icon.svg` | 拡張機能アイコンの元データ（ビルド時にPNG生成） |
 | `tsconfig.json` | TypeScript の型検査設定 |
@@ -196,7 +199,7 @@ WXTの `browser` APIを使い、リンク文字列の取得とミドルクリッ
 
 ### `wxt.config.ts`
 
-現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。クリップボードへの書き込みに `clipboardWrite` を使い、読み取り権限は要求しない。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Chrome では Service Worker からの書き込みに対応した 157 以上を対象とする。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
+現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。クリップボードへの書き込みに `clipboardWrite` を使い、読み取り権限は要求しない。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Chrome では Service Worker からの書き込みに対応した 157 以上を対象とする。Chrome 用の manifest には `key` を含め、展開先のパスが変わっても拡張機能 ID が変わらないようにする。公開鍵は `config/chrome-extension-key.pub` に Base64 で置き、ビルド時に読み込む。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
 
 ### `package.json`
 
