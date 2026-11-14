@@ -209,14 +209,13 @@ npm run build                # Chrome
 npm run build -- -b firefox # Firefox
 npm run zip                  # Chrome 用 zip
 npm run zip:firefox          # Firefox 用 zip
-npm run sign:firefox         # AMO で署名（要 API キー）
 npm run typecheck            # 型検査
 npm test                     # 単体・連携テスト
 ```
 
-成果物は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、配布用 zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に生成される。署名済み XPI は `dist/amo/` に出力される。
+成果物は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、配布用 zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に生成される。
 
-GitHub Actions（`.github/workflows/build.yml`）は `test` / `version` / `release` の3ジョブで構成する。PR では `test`（型検査・テスト・zip 作成）のみ、`main` では `version` で未リリースか確認し、必要なら `release` が `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` を使って Firefox 用 XPI を署名し、`site-search-<version>-firefox-signed.xpi` にリネームして `v<version>` タグと Release を自動作成する。リリース済みのバージョンでは署名と Release をスキップする。
+GitHub Actions（`.github/workflows/build.yml`）は `test` / `version` / `release` の3ジョブで構成する。PR では `test`（型検査・テスト・zip 作成）のみ、`main` では `version` で未リリースか確認し、必要なら `release` が Firefox 用 zip を `site-search-<version>-firefox-unsigned.xpi` としてコピーし、`v<version>` タグと Release を自動作成する。XPI は未署名で、AMO の認証情報は不要。リリース済みのバージョンでは Release をスキップする。
 
 ## 9. 完了条件
 

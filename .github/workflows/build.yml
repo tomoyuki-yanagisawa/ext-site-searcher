@@ -48,13 +48,6 @@ jobs:
           path: dist/*firefox*.zip
           if-no-files-found: error
 
-      - name: Upload Firefox build
-        uses: actions/upload-artifact@v7
-        with:
-          name: site-search-firefox-build
-          path: dist/firefox-mv3
-          if-no-files-found: error
-
   version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -83,20 +76,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - run: npm ci
-
-      - name: Download Firefox build
-        uses: actions/download-artifact@v7
-        with:
-          name: site-search-firefox-build
-          path: dist/firefox-mv3
-
       - name: Download zips
         uses: actions/download-artifact@v7
         with:
@@ -104,24 +83,10 @@ jobs:
           path: zips
           merge-multiple: true
 
-      - name: Sign Firefox xpi
-        env:
-          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
-          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-        run: npm run sign:firefox
-
-      - name: Rename signed xpi
+      - name: Prepare unsigned Firefox xpi
         run: |
           version="${{ needs.version.outputs.version }}"
-          xpi=$(find dist/amo -maxdepth 1 -name '*.xpi' -print -quit)
-          mv "$xpi" "dist/site-search-${version}-firefox-signed.xpi"
-
-      - name: Upload signed xpi
-        uses: actions/upload-artifact@v7
-        with:
-          name: site-search-firefox-signed
-          path: dist/*-firefox-signed.xpi
-          if-no-files-found: error
+          cp "zips/site-search-${version}-firefox.zip" "zips/site-search-${version}-firefox-unsigned.xpi"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v3
@@ -132,4 +97,4 @@ jobs:
           files: |
             zips/*chrome*.zip
             zips/*firefox*.zip
-            dist/*-firefox-signed.xpi
+            zips/*-firefox-unsigned.xpi
