@@ -1,4 +1,4 @@
-import { getSettings, saveSettings, type Site } from '../../utils/settings';
+import { getSettings, normalizeOpenIn, saveSettings, type Site } from '../../utils/settings';
 import { validateSite } from '../../utils/search-url';
 import { browser } from 'wxt/browser';
 import './style.css';
@@ -88,7 +88,7 @@ form.addEventListener('submit', async (event) => {
     const openInSelected = form.querySelector<HTMLInputElement>(
       'input[name="openIn"]:checked',
     );
-    const openIn = openInSelected?.value === 'currentTab' ? 'currentTab' : 'newTab';
+    const openIn = normalizeOpenIn(openInSelected?.value);
     await saveSettings({ sites, openIn, copyQuery: copyQueryInput.checked });
     showMessage(browser.i18n.getMessage('saved'));
   } catch (error) {

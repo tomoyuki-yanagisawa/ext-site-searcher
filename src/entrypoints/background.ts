@@ -118,7 +118,7 @@ export default defineBackground(() => {
       }
     }
 
-    const background = supportsMenuClickButton && (info as typeof info & { button?: number }).button === 1;
+    const background = openIn === 'backgroundTab' || (supportsMenuClickButton && (info as typeof info & { button?: number }).button === 1);
     if (!background && openIn === 'currentTab' && tab?.id !== undefined) {
       await browser.tabs.update(tab.id, { url });
       return;

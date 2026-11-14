@@ -5,7 +5,11 @@ export interface Site {
   url: string;
 }
 
-export type OpenIn = 'newTab' | 'currentTab';
+export type OpenIn = 'newTab' | 'currentTab' | 'backgroundTab';
+
+export function normalizeOpenIn(value: unknown): OpenIn {
+  return value === 'currentTab' || value === 'backgroundTab' ? value : 'newTab';
+}
 
 export interface Settings {
   sites: Site[];
@@ -22,7 +26,7 @@ function isSite(value: unknown): value is Site {
 export function normalizeSettings(values: Record<string, unknown>): Settings {
   return {
     sites: Array.isArray(values.sites) ? values.sites.filter(isSite) : [],
-    openIn: values.openIn === 'currentTab' ? 'currentTab' : 'newTab',
+    openIn: normalizeOpenIn(values.openIn),
     copyQuery: values.copyQuery === true,
   };
 }

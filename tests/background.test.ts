@@ -133,6 +133,18 @@ describe('background menus', () => {
     expect(createTab).not.toHaveBeenCalled();
   });
 
+  it.each(['firefox', 'chrome'])('opens in a background tab when configured (%s)', async (browserName) => {
+    vi.stubEnv('BROWSER', browserName);
+    vi.resetModules();
+    const background = await import('../src/entrypoints/background');
+    background.default.main();
+    await startup();
+    openIn = 'backgroundTab';
+    await click({ menuItemId: menuId('Other'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
+    expect(createTab).toHaveBeenCalledWith({ url: 'https://example.com/?q=test', index: 3, windowId: 8, active: false });
+    expect(updateTab).not.toHaveBeenCalled();
+  });
+
   it('opens Firefox middle clicks in a background tab regardless of the setting', async () => {
     openIn = 'currentTab';
     await click({ menuItemId: menuId('Other'), selectionText: 'test', button: 1 }, { id: 5, index: 2, windowId: 8 });

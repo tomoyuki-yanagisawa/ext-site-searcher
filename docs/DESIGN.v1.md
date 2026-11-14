@@ -4,7 +4,7 @@
 
 Webページ上で選択した文字列を、右クリックメニューから任意のサイトで検索するChrome・Firefox用のブラウザ拡張機能。Firefox ではリンクの表示文字列の検索にも対応する。
 
-検索先は設定画面で自由に追加・編集・削除でき、検索結果は現在のタブまたは右隣の新しいタブで開く。
+検索先は設定画面で自由に追加・編集・削除でき、検索結果は現在のタブまたは右隣の前面・バックグラウンドタブで開く。
 
 ## 2. 技術方針
 
@@ -39,7 +39,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 ```
 
 - サイトの項目はユーザーが登録した検索先から生成する（上記は例）。
-- 検索サイトを選ぶと、検索語を検索URLに埋め込み、設定した開き方（現在のタブ / 右隣の新しいタブ）で開く。
+- 検索サイトを選ぶと、検索語を検索URLに埋め込み、設定した開き方（現在のタブ / 右隣の前面タブ / 右隣のバックグラウンドタブ）で開く。
 - 検索サイトが0件でも「検索サイトを設定…」は表示する。
 - 初期設定は空。設定画面から検索先を登録する。
 - 「検索サイトを設定…」でOptions画面を開く。
@@ -54,6 +54,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 検索結果の開き方
 (•) 新しいタブ（現在のタブの右隣）
 ( ) 現在のタブ
+( ) バックグラウンドのタブ（現在のタブの右隣）
 
 名前       検索URL
 [Google]   [https://www.google.com/search?q={query}] [削除]
@@ -124,7 +125,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 
 - `sites` が未設定の場合は `[]` として扱う。
 - `openIn` が未設定の場合は `"newTab"` として扱う。
-- `openIn` は `"newTab"`（現在のタブの右隣）または `"currentTab"`（現在のタブ）を取る。
+- `openIn` は `"newTab"`（右隣の前面タブ）、`"currentTab"`（現在のタブ）、`"backgroundTab"`（右隣のバックグラウンドタブ）を取る。
 - `copyQuery` は検索語のコピーを有効にする真偽値。未設定や不正な値は `false` として扱う。
 - メニューIDには配列のインデックスとサイトの名前・URLを含める。クリック時に最新の設定と照合し、設定変更前の項目が別のサイトを指さないようにする。
 - 親メニューは `site-search`、設定項目は `site-search-options`、区切り線は `site-search-separator` とする。
@@ -183,7 +184,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 4. サイトのメニューをクリックすると、`contextMenus.onClicked` で `selectionText` とメニューIDを取得する。Firefox では選択文字列がなければ `linkText` を使う。
 5. 最新の `sites` から対象URLを取得し、`{query}` をURLエンコード済みの検索語で置換する。
    `copyQuery` が有効な場合は、エンコード前の検索語をクリップボードに書き込む。書き込みが失敗しても検索を続ける。
-6. `openIn` が `"currentTab"` なら `browser.tabs.update()`、`"newTab"` なら `browser.tabs.create({ index: 現在のタブ + 1 })` で検索結果を開く。
+6. `openIn` が `"currentTab"` なら `browser.tabs.update()`、`"newTab"` または `"backgroundTab"` なら `browser.tabs.create()` で右隣に開く。`"backgroundTab"` では `active: false` を指定する。
    Firefox で `button === 1` の場合は設定にかかわらず右隣のバックグラウンドタブで開く（実機でのミドルクリック動作は未検証）。
 7. 設定項目のクリックでは `browser.runtime.openOptionsPage()` を使う。
 

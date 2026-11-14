@@ -15,4 +15,8 @@ describe('normalizeSettings', () => {
     expect(normalizeSettings({ sites: [site, null, { name: 1 }, 'bad'], openIn: 'currentTab', copyQuery: true }))
       .toEqual({ sites: [site], openIn: 'currentTab', copyQuery: true });
   });
+
+  it('keeps the background-tab setting', () => {
+    expect(normalizeSettings({ openIn: 'backgroundTab' }).openIn).toBe('backgroundTab');
+  });
 });

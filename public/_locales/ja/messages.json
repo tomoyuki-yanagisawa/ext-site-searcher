@@ -8,6 +8,7 @@
   "openMode": { "message": "検索結果の開き方" },
   "newTab": { "message": "新しいタブ（現在のタブの右隣）" },
   "currentTab": { "message": "現在のタブ" },
+  "backgroundTab": { "message": "バックグラウンドのタブ（現在のタブの右隣）" },
   "clipboard": { "message": "クリップボード" },
   "copyQuery": { "message": "検索語をクリップボードにコピーする" },
   "clipboardNotice": { "message": "クリップボードの内容は上書きされます。" },
