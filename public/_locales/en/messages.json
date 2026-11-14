@@ -8,6 +8,7 @@
   "openMode": { "message": "Open search results in" },
   "newTab": { "message": "A new tab to the right of the current tab" },
   "currentTab": { "message": "The current tab" },
+  "backgroundTab": { "message": "A background tab to the right of the current tab" },
   "clipboard": { "message": "Clipboard" },
   "copyQuery": { "message": "Copy the search text to the clipboard" },
   "clipboardNotice": { "message": "This replaces the current clipboard contents." },
