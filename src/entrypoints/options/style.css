@@ -94,7 +94,7 @@ fieldset > p {
 
 #sites li {
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) minmax(260px, 2.5fr) auto;
+  grid-template-columns: minmax(140px, 1fr) minmax(260px, 2.5fr) auto auto auto;
   gap: 8px;
   align-items: center;
 }
@@ -167,21 +167,16 @@ footer button {
   }
 
   #sites li {
-    grid-template-columns: 1fr auto;
+    display: flex;
+    flex-wrap: wrap;
   }
 
-  #sites input[name="name"] {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
+  #sites input[name="name"],
   #sites input[name="url"] {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    flex: 1 1 100%;
   }
 
-  #sites button {
-    grid-column: 2;
-    grid-row: 1;
+  #sites button[data-action="delete"] {
+    margin-left: auto;
   }
 }

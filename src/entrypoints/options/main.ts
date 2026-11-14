@@ -25,8 +25,13 @@ document.documentElement.lang = browser.i18n.getUILanguage().toLowerCase().start
 translate(document);
 translate(siteRow.content);
 
-function updateEmptyState(): void {
-  emptyState.hidden = sitesContainer.querySelector('li') !== null;
+function updateRowState(): void {
+  const rows = [...sitesContainer.querySelectorAll('li')];
+  emptyState.hidden = rows.length > 0;
+  rows.forEach((row, index) => {
+    row.querySelector<HTMLButtonElement>('[data-action="move-up"]')!.disabled = index === 0;
+    row.querySelector<HTMLButtonElement>('[data-action="move-down"]')!.disabled = index === rows.length - 1;
+  });
 }
 
 function showMessage(text: string, isError = false): void {
@@ -34,15 +39,10 @@ function showMessage(text: string, isError = false): void {
   message.toggleAttribute('data-error', isError);
 }
 
-function createRow(site: Site = { name: '', url: '' }): HTMLLIElement {
+function appendRow(site: Site = { name: '', url: '' }): HTMLLIElement {
   const row = siteRow.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
   row.querySelector<HTMLInputElement>('input[name="name"]')!.value = site.name;
   row.querySelector<HTMLInputElement>('input[name="url"]')!.value = site.url;
-  return row;
-}
-
-function appendRow(site?: Site): HTMLLIElement {
-  const row = createRow(site);
   sitesContainer.append(row);
   return row;
 }
@@ -59,7 +59,7 @@ async function loadSettings(): Promise<void> {
 
   sitesContainer.replaceChildren();
   sites.forEach((site) => appendRow(site));
-  updateEmptyState();
+  updateRowState();
   form.inert = false;
 }
 
@@ -100,7 +100,7 @@ form.addEventListener('submit', async (event) => {
 addButton.addEventListener('click', () => {
   showMessage('');
   appendRow().querySelector('input')?.focus();
-  updateEmptyState();
+  updateRowState();
 });
 
 sitesContainer.addEventListener('click', (event) => {
@@ -108,14 +108,29 @@ sitesContainer.addEventListener('click', (event) => {
     return;
   }
 
-  const button = event.target.closest('button[data-action="delete"]');
-  if (!button) {
+  const button = event.target.closest('button[data-action]');
+  const row = button?.closest('li');
+  if (!(button instanceof HTMLButtonElement) || !(row instanceof HTMLLIElement)) {
     return;
   }
 
-  button.closest('li')?.remove();
+  if (button.dataset.action === 'delete') {
+    row.remove();
+  } else {
+    const up = button.dataset.action === 'move-up';
+    const sibling = up ? row.previousElementSibling : row.nextElementSibling;
+    if (!(sibling instanceof HTMLLIElement)) {
+      return;
+    }
+    if (up) {
+      sibling.before(row);
+    } else {
+      sibling.after(row);
+    }
+  }
+
   showMessage('');
-  updateEmptyState();
+  updateRowState();
 });
 
 loadSettings().catch((error: unknown) => {

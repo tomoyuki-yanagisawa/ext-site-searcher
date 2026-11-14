@@ -1,5 +1,5 @@
 import { browser, type Browser } from 'wxt/browser';
-import { getSettings, type OpenIn, type Site } from '../utils/settings';
+import { getSettings, type OpenIn } from '../utils/settings';
 import { searchUrl } from '../utils/search-url';
 import { supportsLinkText, supportsMenuClickButton } from '../utils/feature';
 
@@ -11,18 +11,10 @@ type MenuItem = Browser.contextMenus.CreateProperties;
 
 let menuUpdateQueue: Promise<void> = Promise.resolve();
 
-function siteIdentity(site: Site): string {
-  return encodeURIComponent(JSON.stringify([site.name, site.url]));
-}
-
-function siteMenuId(site: Site, index: number): string {
-  return `${SITE_MENU_PREFIX}${index}-${siteIdentity(site)}`;
-}
-
-function findMenuSite(menuId: string | number, sites: Site[]): Site | undefined {
+function siteIndex(menuId: string | number): number | undefined {
   if (typeof menuId !== 'string' || !menuId.startsWith(SITE_MENU_PREFIX)) return;
-  const match = /^\d+-(.+)$/.exec(menuId.slice(SITE_MENU_PREFIX.length));
-  return match ? sites.find((site) => siteIdentity(site) === match[1]) : undefined;
+  const value = menuId.slice(SITE_MENU_PREFIX.length);
+  return /^\d+$/.test(value) ? Number(value) : undefined;
 }
 
 /**
@@ -55,7 +47,7 @@ async function rebuildMenus(): Promise<void> {
 
   for (const [index, site] of sites.entries()) {
     await createMenuItem({
-      id: siteMenuId(site, index),
+      id: `${SITE_MENU_PREFIX}${index}`,
       parentId: MENU_ROOT_ID,
       title: site.name,
       contexts,
@@ -121,7 +113,8 @@ export default defineBackground(() => {
     }
 
     const { sites, openIn, copyQuery } = await getSettings();
-    const site = findMenuSite(info.menuItemId, sites);
+    const index = siteIndex(info.menuItemId);
+    const site = index === undefined ? undefined : sites[index];
     const linkText = supportsLinkText && 'linkText' in info && typeof info.linkText === 'string' ? info.linkText : undefined;
     const query = info.selectionText || linkText;
     if (!site || !query) {
