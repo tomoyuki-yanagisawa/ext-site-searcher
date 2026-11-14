@@ -1,5 +1,8 @@
 /// <reference types="@wxt-dev/auto-icons" />
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'wxt';
+
+const chromeExtensionKey = readFileSync('config/chrome-extension-key.pub', 'utf8').trim();
 
 export default defineConfig({
   srcDir: 'src',
@@ -16,7 +19,11 @@ export default defineConfig({
     description: '__MSG_extensionDescription__',
     default_locale: 'en',
     permissions: ['contextMenus', 'storage', 'clipboardWrite'],
-    ...(browser === 'chrome' && { minimum_chrome_version: '157' }),
+    ...(browser === 'chrome' && {
+      minimum_chrome_version: '157',
+      // 読み込み元のパスが変わっても拡張機能 ID を固定する
+      key: chromeExtensionKey,
+    }),
     // Firefox 専用の設定は Chrome の manifest に含めない
     ...(browser === 'firefox' && {
       browser_specific_settings: {
