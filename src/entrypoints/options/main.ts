@@ -9,6 +9,7 @@ const siteRow = document.querySelector<HTMLTemplateElement>('#site-row')!;
 const copyQueryInput = document.querySelector<HTMLInputElement>('#copy-query')!;
 const emptyState = document.querySelector<HTMLElement>('#empty')!;
 const addButton = document.querySelector<HTMLButtonElement>('#add')!;
+const saveButton = document.querySelector<HTMLButtonElement>('#save')!;
 const message = document.querySelector<HTMLElement>('#message')!;
 
 function translate(root: ParentNode): void {
@@ -39,6 +40,10 @@ function showMessage(text: string, isError = false): void {
   message.toggleAttribute('data-error', isError);
 }
 
+function setDirty(dirty: boolean): void {
+  saveButton.disabled = !dirty;
+}
+
 function appendRow(site: Site = { name: '', url: '' }): HTMLLIElement {
   const row = siteRow.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
   row.querySelector<HTMLInputElement>('input[name="name"]')!.value = site.name;
@@ -60,6 +65,7 @@ async function loadSettings(): Promise<void> {
   sitesContainer.replaceChildren();
   sites.forEach((site) => appendRow(site));
   updateRowState();
+  setDirty(false);
   form.inert = false;
 }
 
@@ -90,6 +96,7 @@ form.addEventListener('submit', async (event) => {
     );
     const openIn = normalizeOpenIn(openInSelected?.value);
     await saveSettings({ sites, openIn, copyQuery: copyQueryInput.checked });
+    setDirty(false);
     showMessage(browser.i18n.getMessage('saved'));
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -101,6 +108,7 @@ addButton.addEventListener('click', () => {
   showMessage('');
   appendRow().querySelector('input')?.focus();
   updateRowState();
+  setDirty(true);
 });
 
 sitesContainer.addEventListener('click', (event) => {
@@ -131,7 +139,10 @@ sitesContainer.addEventListener('click', (event) => {
 
   showMessage('');
   updateRowState();
+  setDirty(true);
 });
+
+form.addEventListener('input', () => setDirty(true));
 
 loadSettings().catch((error: unknown) => {
   form.querySelectorAll('input, button').forEach((element) => {
