@@ -1,5 +1,5 @@
 import type { Browser } from 'wxt/browser';
-import { getSettings, type Site } from '../utils/settings';
+import { getSettings, type OpenIn, type Site } from '../utils/settings';
 import { searchUrl } from '../utils/search-url';
 import { supportsLinkText, supportsMenuClickButton } from '../utils/feature';
 
@@ -13,6 +13,16 @@ let menuUpdateQueue: Promise<void> = Promise.resolve();
 
 function siteIdentity(site: Site): string {
   return encodeURIComponent(JSON.stringify([site.name, site.url]));
+}
+
+function siteMenuId(site: Site, index: number): string {
+  return `${SITE_MENU_PREFIX}${index}-${siteIdentity(site)}`;
+}
+
+function findMenuSite(menuId: string | number, sites: Site[]): Site | undefined {
+  if (typeof menuId !== 'string' || !menuId.startsWith(SITE_MENU_PREFIX)) return;
+  const match = /^\d+-(.+)$/.exec(menuId.slice(SITE_MENU_PREFIX.length));
+  return match ? sites.find((site) => siteIdentity(site) === match[1]) : undefined;
 }
 
 /**
@@ -45,7 +55,7 @@ async function rebuildMenus(): Promise<void> {
 
   for (const [index, site] of sites.entries()) {
     await createMenuItem({
-      id: `${SITE_MENU_PREFIX}${index}-${siteIdentity(site)}`,
+      id: siteMenuId(site, index),
       parentId: MENU_ROOT_ID,
       title: site.name,
       contexts,
@@ -76,6 +86,20 @@ function enqueueMenuUpdate(): Promise<void> {
   return menuUpdateQueue;
 }
 
+async function openSearch(url: string, openIn: OpenIn, middleClick: boolean, tab?: Browser.tabs.Tab): Promise<void> {
+  const background = openIn === 'backgroundTab' || middleClick;
+  if (!background && openIn === 'currentTab' && tab?.id !== undefined) {
+    await browser.tabs.update(tab.id, { url });
+  } else {
+    await browser.tabs.create({
+      url,
+      windowId: tab?.windowId,
+      index: tab ? tab.index + 1 : undefined,
+      ...(background ? { active: false } : {}),
+    });
+  }
+}
+
 export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(enqueueMenuUpdate);
   browser.runtime.onStartup.addListener(enqueueMenuUpdate);
@@ -96,13 +120,8 @@ export default defineBackground(() => {
       return;
     }
 
-    const match = /^\d+-(.+)$/.exec(info.menuItemId.slice(SITE_MENU_PREFIX.length));
-    if (!match?.[1]) {
-      return;
-    }
-
     const { sites, openIn, copyQuery } = await getSettings();
-    const site = sites.find((item) => siteIdentity(item) === match[1]);
+    const site = findMenuSite(info.menuItemId, sites);
     const query = info.selectionText || (supportsLinkText ? (info as typeof info & { linkText?: string }).linkText : undefined);
     if (!site || !query) {
       return;
@@ -118,18 +137,7 @@ export default defineBackground(() => {
       }
     }
 
-    const background = openIn === 'backgroundTab' || (supportsMenuClickButton && (info as typeof info & { button?: number }).button === 1);
-    if (!background && openIn === 'currentTab' && tab?.id !== undefined) {
-      await browser.tabs.update(tab.id, { url });
-      return;
-    }
-
-    // 現在のタブの右隣に開く
-    await browser.tabs.create({
-      url,
-      windowId: tab?.windowId,
-      index: tab ? tab.index + 1 : undefined,
-      ...(background ? { active: false } : {}),
-    });
+    const middleClick = supportsMenuClickButton && (info as typeof info & { button?: number }).button === 1;
+    await openSearch(url, openIn, middleClick, tab);
   });
 });
