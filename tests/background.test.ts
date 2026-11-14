@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-type Menu = { id: string; title?: string };
-type Click = (info: { menuItemId: string | number; selectionText?: string; button?: number }, tab?: { id?: number; index: number; windowId: number }) => Promise<void>;
+type Menu = { id: string; title?: string; contexts?: string[] };
+type Click = (info: { menuItemId: string | number; selectionText?: string; linkText?: string; button?: number }, tab?: { id?: number; index: number; windowId: number }) => Promise<void>;
 
 const google = { name: 'Google', url: 'https://google.com/search?q={query}' };
 const other = { name: 'Other', url: 'https://example.com/?q={query}' };
@@ -73,6 +73,27 @@ describe('background menus', () => {
   it('uses translated messages for built-in menu titles', () => {
     expect(menuId('menuSearch')).toBe('site-search');
     expect(menuId('menuSettings')).toBe('site-search-options');
+  });
+
+  it('supports Firefox link text and copies the search query', async () => {
+    expect(menus.every((menu) => menu.contexts?.includes('link'))).toBe(true);
+    copyQuery = true;
+    await click({ menuItemId: menuId('Google'), linkText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });
+    expect(createTab).toHaveBeenCalledWith({ url: 'https://google.com/search?q=%E7%8C%AB%20%26%20%E7%8A%AC', index: 3, windowId: 8 });
+    expect(writeText).toHaveBeenCalledWith('猫 & 犬');
+  });
+
+  it('prefers selected text over link text', async () => {
+    await click({ menuItemId: menuId('Google'), selectionText: 'selected', linkText: 'link' });
+    expect(createTab).toHaveBeenCalledWith(expect.objectContaining({ url: 'https://google.com/search?q=selected' }));
+  });
+
+  it('ignores link text in Chrome', async () => {
+    vi.stubEnv('BROWSER', 'chrome');
+    await startup();
+    expect(menus.every((menu) => !menu.contexts?.includes('link'))).toBe(true);
+    await click({ menuItemId: menuId('Google'), linkText: 'link' });
+    expect(createTab).not.toHaveBeenCalled();
   });
 
   it('opens the selected site to the right in the source window', async () => {

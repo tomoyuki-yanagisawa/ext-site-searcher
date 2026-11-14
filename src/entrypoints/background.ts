@@ -33,12 +33,13 @@ function createMenuItem(item: MenuItem): Promise<void> {
 
 async function rebuildMenus(): Promise<void> {
   const { sites } = await getSettings();
+  const contexts: MenuItem['contexts'] = import.meta.env.BROWSER === 'firefox' ? ['selection', 'link'] : ['selection'];
 
   await browser.contextMenus.removeAll();
   await createMenuItem({
     id: MENU_ROOT_ID,
     title: browser.i18n.getMessage('menuSearch'),
-    contexts: ['selection'],
+    contexts,
   });
 
   for (const [index, site] of sites.entries()) {
@@ -46,7 +47,7 @@ async function rebuildMenus(): Promise<void> {
       id: `${SITE_MENU_PREFIX}${index}-${siteIdentity(site)}`,
       parentId: MENU_ROOT_ID,
       title: site.name,
-      contexts: ['selection'],
+      contexts,
     });
   }
 
@@ -55,7 +56,7 @@ async function rebuildMenus(): Promise<void> {
       id: `${MENU_ROOT_ID}-separator`,
       parentId: MENU_ROOT_ID,
       type: 'separator',
-      contexts: ['selection'],
+      contexts,
     });
   }
 
@@ -63,7 +64,7 @@ async function rebuildMenus(): Promise<void> {
     id: MENU_OPTIONS_ID,
     parentId: MENU_ROOT_ID,
     title: browser.i18n.getMessage('menuSettings'),
-    contexts: ['selection'],
+    contexts,
   });
 }
 
@@ -101,15 +102,16 @@ export default defineBackground(() => {
 
     const { sites, openIn, copyQuery } = await getSettings();
     const site = sites.find((item) => siteIdentity(item) === match[1]);
-    if (!site || !info.selectionText) {
+    const query = info.selectionText || (import.meta.env.BROWSER === 'firefox' ? (info as typeof info & { linkText?: string }).linkText : undefined);
+    if (!site || !query) {
       return;
     }
 
-    const url = searchUrl(site.url, info.selectionText);
+    const url = searchUrl(site.url, query);
 
     if (copyQuery) {
       try {
-        await navigator.clipboard.writeText(info.selectionText);
+        await navigator.clipboard.writeText(query);
       } catch (error) {
         console.error('Failed to copy search query', error);
       }
