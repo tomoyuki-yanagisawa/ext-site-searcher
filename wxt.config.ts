@@ -21,7 +21,7 @@ export default defineConfig({
     ...(browser === 'firefox' && {
       browser_specific_settings: {
         gecko: {
-          id: 'site-search@tomoyuki-yanagisawa.github.io',
+          id: '@site-search.tomoyuki-yanagisawa',
           // Windows 7 で使える最後の Firefox は 115 ESR のため下限を 115 にする
           strict_min_version: '115.0',
           data_collection_permissions: {
