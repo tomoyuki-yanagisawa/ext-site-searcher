@@ -46,7 +46,7 @@ Webページ上で選択した文字列を、右クリックメニューから�
 
 ### ビルド済みパッケージを使う
 
-安定版は [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) からダウンロードできます。Chrome 用・Firefox 用の zip と、署名済みの Firefox 用 XPI が添付されています。
+安定版は [Releases](https://github.com/tomoyuki-yanagisawa/ext-site-searcher/releases) からダウンロードできます。Chrome 用・Firefox 用の zip と、未署名の Firefox 用 XPI が添付されています。
 
 Actions の成果物を使う場合は次の手順です。
 
@@ -54,7 +54,7 @@ Actions の成果物を使う場合は次の手順です。
 2. Artifacts の `site-search-chrome-zip` または `site-search-firefox-zip` をダウンロードする
 3. Chrome は zip を展開して使う。Firefox は zip のまま読み込める
 
-バージョンを上げて `main` にマージすると Release が自動作成されます。署名用のシークレットが必要です（後述）。
+バージョンを上げて `main` にマージすると Release が自動作成されます。
 
 ### 自分でビルドする
 
@@ -94,35 +94,17 @@ Windows 7 で利用できる Firefox は 115 ESR が最後です。事前にイ�
 
 #### 常時使う
 
-Firefox ESR では署名チェックを無効にできます。
+Firefox ESR では署名チェックを無効にして未署名 XPI をインストールできます。この設定はプロファイル内のすべての拡張機能に適用されるため、信頼できるファイルだけをインストールしてください。通常版 Firefox では未署名の拡張機能を常用できません。
 
 1. `about:config` を開き、`xpinstall.signatures.required` を `false` にする
-2. Firefox 用 zip の拡張子を `.xpi` に変更する
-3. `about:addons` の歯車メニューから「ファイルからアドオンをインストール」を選び、`.xpi` を指定する
+2. Release の未署名 `.xpi` を Firefox で開き、インストールを確認する
+3. 開けない場合は、ダウンロードした `.xpi` を Firefox にドラッグするか、`about:addons` の「ファイルからアドオンをインストール」で指定する
 
-AMO（addons.mozilla.org）で署名した xpi を使う場合、署名チェックを無効にする必要はありません。
+Actions の Firefox 用 zip を使う場合は、拡張子を `.xpi` に変更してインストールできます。
 
-## リリースと署名（GitHub Actions）
+## リリース（GitHub Actions）
 
-`main` への push と PR では、`test` ジョブが Chrome / Firefox の zip をビルドして Artifacts に保存します。PR ではここまでです。`main` では `version` ジョブが未リリースか確認し、必要なら `release` ジョブが AMO で Firefox 用 XPI を署名して `v<version>` タグと Release を自動作成します。
-
-### シークレットの登録
-
-リポジトリの Settings → Secrets and variables → Actions → New repository secret で次を登録します。
-
-| 名前 | 値 |
-|---|---|
-| `AMO_JWT_ISSUER` | AMO の JWT issuer（`user:12345:678` 形式） |
-| `AMO_JWT_SECRET` | AMO の JWT secret |
-
-CLI の場合は次のとおりです（実行すると値の入力プロンプトが出ます）。
-
-```sh
-gh secret set AMO_JWT_ISSUER
-gh secret set AMO_JWT_SECRET
-```
-
-シークレットは保存後に値を表示できません。fork からの PR には渡りません。
+`main` への push と PR では、`test` ジョブが Chrome / Firefox の zip をビルドして Artifacts に保存します。PR ではここまでです。`main` では `version` ジョブが未リリースか確認し、必要なら `release` ジョブが Firefox 用 zip から未署名 XPI を作り、`v<version>` タグと Release を自動作成します。AMO への署名申請やシークレットは不要です。
 
 ### リリース手順
 
@@ -136,24 +118,13 @@ git add package.json package-lock.json
 git commit -m "chore: bump version"
 ```
 
-`package.json` の version がすでにリリース済みの場合、ビルドと Artifacts のみ行われ、署名と Release はスキップされます。AMO は同じバージョンを再署名できないため、修正版は必ずバージョンを上げてください。
+`package.json` の version がすでにリリース済みの場合、ビルドと Artifacts のみ行われ、Release はスキップされます。新しい Release にはバージョンを上げてください。
 
 `main` の CI は同時に実行せず、最大100件まで待機します。待機上限を超えた run はキャンセルされ、GitHub Actions は実行順も保証しないため、連続してリリースする場合は各 run の結果と対象コミットを確認してください。
 
 手動でタグを push する必要はありません。`workflow_dispatch` はビルド確認用で、Release は作成しません。
 
-ここで作成される XPI は AMO の **unlisted（非公開）署名**です。AMO での一般公開や Chrome Web Store への公開は別途手続きが必要です。
-
-### 手元で署名する
-
-```sh
-npm run build -- -b firefox  # 署名対象の dist/firefox-mv3 を作成
-export WEB_EXT_API_KEY='user:12345:678'
-export WEB_EXT_API_SECRET='...'
-npm run sign:firefox
-```
-
-署名済み `.xpi` は `dist/amo/` に出力されます。
+作成される XPI は未署名です。AMO での一般公開や Chrome Web Store への公開は別途手続きが必要です。
 
 ## 使い方
 
@@ -186,7 +157,6 @@ npm run typecheck            # TypeScript の型検査
 npm test                     # 単体テスト
 npm run zip                  # Chrome 用 zip を作成
 npm run zip:firefox          # Firefox 用 zip を作成
-npm run sign:firefox         # AMO で署名（要 API キー）
 ```
 
 `npm install` 時に `wxt prepare` が実行され、型検査に必要な `.wxt/` の型定義が生成されます。
