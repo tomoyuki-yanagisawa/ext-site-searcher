@@ -1,4 +1,4 @@
-import type { Browser } from 'wxt/browser';
+import { browser, type Browser } from 'wxt/browser';
 import { getSettings, type OpenIn, type Site } from '../utils/settings';
 import { searchUrl } from '../utils/search-url';
 import { supportsLinkText, supportsMenuClickButton } from '../utils/feature';
@@ -122,7 +122,8 @@ export default defineBackground(() => {
 
     const { sites, openIn, copyQuery } = await getSettings();
     const site = findMenuSite(info.menuItemId, sites);
-    const query = info.selectionText || (supportsLinkText ? (info as typeof info & { linkText?: string }).linkText : undefined);
+    const linkText = supportsLinkText && 'linkText' in info && typeof info.linkText === 'string' ? info.linkText : undefined;
+    const query = info.selectionText || linkText;
     if (!site || !query) {
       return;
     }
@@ -137,7 +138,7 @@ export default defineBackground(() => {
       }
     }
 
-    const middleClick = supportsMenuClickButton && (info as typeof info & { button?: number }).button === 1;
+    const middleClick = supportsMenuClickButton && 'button' in info && info.button === 1;
     await openSearch(url, openIn, middleClick, tab);
   });
 });
