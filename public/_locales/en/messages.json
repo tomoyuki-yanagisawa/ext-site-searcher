@@ -17,6 +17,8 @@
   "name": { "message": "Name" },
   "searchUrl": { "message": "Search URL" },
   "delete": { "message": "Delete" },
+  "moveUp": { "message": "Move up" },
+  "moveDown": { "message": "Move down" },
   "empty": { "message": "No search sites yet. Use Add site to add one." },
   "addSite": { "message": "＋ Add site" },
   "save": { "message": "Save" },

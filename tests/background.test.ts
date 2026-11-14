@@ -181,30 +181,33 @@ describe('background menus', () => {
     expect(createTab).not.toHaveBeenCalled();
   });
 
-  it('does not open a different site when an old menu is clicked after deletion', async () => {
-    const staleId = menuId('Google');
-    sites = [other];
-    changed({ sites: {} }, 'local');
-    await click({ menuItemId: staleId, selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
-    expect(createTab).not.toHaveBeenCalled();
-    await startup();
-    expect(menuId('Other')).toBeTruthy();
+  it('creates site menus in settings order', () => {
+    const ids = menus.filter((menu) => menu.id.startsWith('site-index-')).map((menu) => menu.id);
+    expect(ids).toEqual(['site-index-0', 'site-index-1']);
   });
 
-  it('keeps the same target when sites are reordered before a click', async () => {
-    const staleId = menuId('Google');
+  it('opens the site at the clicked index from the current settings', async () => {
+    const googleId = menuId('Google');
     sites = [other, google];
     changed({ sites: {} }, 'local');
-    await click({ menuItemId: staleId, selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
-    expect(createTab).toHaveBeenCalledWith({ url: 'https://google.com/search?q=test', index: 3, windowId: 8 });
+    await click({ menuItemId: googleId, selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
+    expect(createTab).toHaveBeenCalledWith({ url: 'https://example.com/?q=test', index: 3, windowId: 8 });
     await startup();
   });
 
-  it('ignores an old menu when its URL has been edited', async () => {
-    const staleId = menuId('Google');
+  it('uses the edited URL for the clicked index', async () => {
     sites = [{ ...google, url: 'https://example.com/?q={query}' }, other];
     changed({ sites: {} }, 'local');
-    await click({ menuItemId: staleId, selectionText: 'test' });
+    await click({ menuItemId: menuId('Google'), selectionText: 'test' });
+    expect(createTab).toHaveBeenCalledWith(expect.objectContaining({ url: 'https://example.com/?q=test' }));
+    await startup();
+  });
+
+  it('ignores a site index that no longer exists', async () => {
+    const index = menuId('Other');
+    sites = [google];
+    changed({ sites: {} }, 'local');
+    await click({ menuItemId: index, selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
     expect(createTab).not.toHaveBeenCalled();
     await startup();
   });

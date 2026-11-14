@@ -17,6 +17,8 @@
   "name": { "message": "名前" },
   "searchUrl": { "message": "検索URL" },
   "delete": { "message": "削除" },
+  "moveUp": { "message": "上へ移動" },
+  "moveDown": { "message": "下へ移動" },
   "empty": { "message": "まだ検索サイトが登録されていません。「サイトを追加」から登録してください。" },
   "addSite": { "message": "＋ サイトを追加" },
   "save": { "message": "保存" },
