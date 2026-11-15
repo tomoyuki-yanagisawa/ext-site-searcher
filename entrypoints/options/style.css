@@ -18,8 +18,8 @@ body {
   background: Canvas;
   color: CanvasText;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* 既定 16px で 13px。ブラウザの文字サイズ設定に追従する。 */
-  font-size: 0.8125rem;
+  /* 既定 16px で 14px。ブラウザの文字サイズ設定に追従する。 */
+  font-size: 0.875rem;
   line-height: 1.5;
 }
 
