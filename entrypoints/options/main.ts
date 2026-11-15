@@ -46,8 +46,8 @@ function appendRow(site: Site = { name: '', url: '' }): HTMLLIElement {
   if (!(row instanceof HTMLLIElement)) {
     throw new Error('site-row template is missing');
   }
-  requiredElement<HTMLInputElement>(row, 'input[name="name"]').value = site.name;
-  requiredElement<HTMLInputElement>(row, 'input[name="url"]').value = site.url;
+  requiredElement<HTMLInputElement>(row, '.site-name').value = site.name;
+  requiredElement<HTMLInputElement>(row, '.site-url').value = site.url;
   sitesContainer.append(row);
   return row;
 }
@@ -76,8 +76,8 @@ form.addEventListener('submit', async (event) => {
   const sites: Site[] = [];
 
   for (const [index, row] of rows.entries()) {
-    const nameInput = requiredElement<HTMLInputElement>(row, 'input[name="name"]');
-    const urlInput = requiredElement<HTMLInputElement>(row, 'input[name="url"]');
+    const nameInput = requiredElement<HTMLInputElement>(row, '.site-name');
+    const urlInput = requiredElement<HTMLInputElement>(row, '.site-url');
     const site = { name: nameInput.value, url: urlInput.value };
     const error = validateSite(site);
 

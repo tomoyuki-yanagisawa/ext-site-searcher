@@ -10,7 +10,7 @@
   <body>
     <header>
       <h1 data-i18n="heading">Search site settings</h1>
-      <p data-i18n="intro">Add sites to search from the context menu.</p>
+      <p class="hint" data-i18n="intro">Add sites to search from the context menu.</p>
     </header>
 
     <main>
@@ -37,26 +37,28 @@
             <input id="copy-query" type="checkbox" />
             <span data-i18n="copyQuery">Copy the search text to the clipboard</span>
           </label>
-          <p data-i18n="clipboardNotice">This replaces the current clipboard contents.</p>
+          <p class="hint" data-i18n="clipboardNotice">This replaces the current clipboard contents.</p>
         </fieldset>
 
         <fieldset>
           <legend data-i18n="sites">Search sites</legend>
-          <p data-i18n="queryHelp">{query} is replaced with the selected text.</p>
+          <p class="hint" data-i18n="queryHelp">{query} is replaced with the selected text.</p>
 
           <ol id="sites"></ol>
 
           <template id="site-row">
-            <li>
-              <input type="text" name="name" placeholder="Google" aria-label="Name" data-i18n-label="name" />
-              <input type="text" name="url" placeholder="https://www.google.com/search?q={query}" aria-label="Search URL" data-i18n-label="searchUrl" />
-              <button type="button" data-action="move-up" aria-label="Move up" data-i18n-label="moveUp">↑</button>
-              <button type="button" data-action="move-down" aria-label="Move down" data-i18n-label="moveDown">↓</button>
-              <button type="button" data-action="delete" data-i18n="delete">Delete</button>
+            <li class="site-row">
+              <input class="site-name" type="text" placeholder="Google" aria-label="Name" data-i18n-label="name" />
+              <input class="site-url" type="text" placeholder="https://www.google.com/search?q={query}" aria-label="Search URL" data-i18n-label="searchUrl" />
+              <div class="row-actions">
+                <button type="button" data-action="move-up" aria-label="Move up" data-i18n-label="moveUp">↑</button>
+                <button type="button" data-action="move-down" aria-label="Move down" data-i18n-label="moveDown">↓</button>
+                <button type="button" data-action="delete" data-i18n="delete">Delete</button>
+              </div>
             </li>
           </template>
 
-          <p id="empty" data-i18n="empty">No search sites yet. Use Add site to add one.</p>
+          <p id="empty" class="hint" data-i18n="empty">No search sites yet. Use Add site to add one.</p>
 
           <button id="add" type="button" data-i18n="addSite">＋ Add site</button>
         </fieldset>
