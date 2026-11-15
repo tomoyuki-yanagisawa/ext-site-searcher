@@ -76,7 +76,7 @@ describe('background menus', () => {
   async function startBrowser(name: string): Promise<void> {
     vi.stubEnv('BROWSER', name);
     vi.resetModules();
-    const background = await import('../src/entrypoints/background');
+    const background = await import('../entrypoints/background');
     background.default.main();
     await startup();
   }

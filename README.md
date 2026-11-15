@@ -20,23 +20,22 @@ Webページ上で選択した文字列を、右クリックメニューから�
 
 ```text
 .
-├── src/
-│   ├── assets/icon.svg
-│   ├── entrypoints/
-│   │   ├── background.ts
-│   │   └── options/
-│   │       ├── index.html
-│   │       ├── main.ts
-│   │       └── style.css
-│   └── utils/     # 設定と検索 URL の共通処理
+├── assets/icon.svg
+├── entrypoints/
+│   ├── background.ts
+│   └── options/
+│       ├── index.html
+│       ├── main.ts
+│       └── style.css
+├── utils/         # 設定と検索 URL の共通処理
 ├── tests/         # 単体・連携テスト
 ├── public/_locales/ # 英語・日本語の翻訳
-├── config/        # ビルド設定（Chrome の公開鍵）
 ├── scripts/       # ビルド補助スクリプト
 ├── .github/       # CI とリリース判定スクリプト
 ├── dist/          # ビルド成果物（gitignore）
 ├── .wxt/          # 型定義キャッシュ（gitignore）
 ├── docs/
+├── chrome-extension-key.pub # Chrome の拡張機能 ID を固定する公開鍵
 ├── package.json
 ├── tsconfig.json
 └── wxt.config.ts
@@ -168,6 +167,6 @@ npm run xpi:firefox          # Firefox 用 XPI（未署名）を作成
 
 `npm install` 時に `wxt prepare` が実行され、型検査に必要な `.wxt/` の型定義が生成されます。
 
-アイコンは `src/assets/icon.svg` をもとにビルド時に PNG が生成されます（Chrome は manifest のアイコンに SVG を使えないため）。リポジトリには SVG のみをコミットします。
+アイコンは `assets/icon.svg` をもとにビルド時に PNG が生成されます（Chrome は manifest のアイコンに SVG を使えないため）。リポジトリには SVG のみをコミットします。
 
 `dist/` と `.wxt/` はビルド生成物のためコミットしません。`.wxt/` は型定義と `tsconfig` の生成キャッシュです。

@@ -138,49 +138,49 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 
 ```text
 .
-├── src/
-│   ├── assets/
-│   │   └── icon.svg
-│   ├── entrypoints/
-│   │   ├── background.ts
-│   │   └── options/
-│   │       ├── index.html
-│   │       ├── main.ts
-│   │       └── style.css
-│   └── utils/
-│       ├── feature.ts
-│       ├── search-url.ts
-│       └── settings.ts
+├── assets/
+│   └── icon.svg
+├── entrypoints/
+│   ├── background.ts
+│   └── options/
+│       ├── index.html
+│       ├── main.ts
+│       └── style.css
+├── utils/
+│   ├── dom.ts
+│   ├── feature.ts
+│   ├── search-url.ts
+│   └── settings.ts
 ├── tests/
 ├── public/_locales/
-├── config/
-│   └── chrome-extension-key.pub
 ├── scripts/
 │   └── make-xpi.mjs
 ├── .github/
 │   ├── scripts/check-release.mjs
 │   └── workflows/build.yml
+├── chrome-extension-key.pub
 ├── tsconfig.json
 ├── wxt.config.ts
 └── package.json
 ```
 
-ソースは `src/`、テストは `tests/` に置く。ビルド成果物は `dist/`、型定義キャッシュは `.wxt/` に出力される（`dist/` と `.wxt/` はコミットしない）。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時にPNG（16/32/48/96/128）を生成する。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
+ソースはリポジトリ直下の `entrypoints/` と `utils/`、テストは `tests/` に置く。ビルド成果物は `dist/`、型定義キャッシュは `.wxt/` に出力される（`dist/` と `.wxt/` はコミットしない）。アイコンは `assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時にPNG（16/32/48/96/128）を生成する。`manifest.json` はWXTが生成し、`package-lock.json` はnpmが生成する。
 
 | ファイル | 役割 |
 |---|---|
-| `src/entrypoints/background.ts` | メニュー作成、検索処理、設定変更の反映 |
-| `src/entrypoints/options/index.html` | 設定画面のマークアップ |
-| `src/entrypoints/options/main.ts` | 追加・編集・削除・バリデーション・保存 |
-| `src/entrypoints/options/style.css` | 設定画面のスタイル（OS / ブラウザ標準に寄せる） |
-| `src/utils/search-url.ts` | 検索URLの検証と生成 |
-| `src/utils/feature.ts` | ビルド対象ブラウザに基づく機能対応フラグ |
-| `src/utils/settings.ts` | 設定の型・読み書きと既定値 |
+| `entrypoints/background.ts` | メニュー作成、検索処理、設定変更の反映 |
+| `entrypoints/options/index.html` | 設定画面のマークアップ |
+| `entrypoints/options/main.ts` | 追加・編集・削除・バリデーション・保存 |
+| `entrypoints/options/style.css` | 設定画面のスタイル（OS / ブラウザ標準に寄せる） |
+| `utils/search-url.ts` | 検索URLの検証と生成 |
+| `utils/dom.ts` | 必須 DOM 要素の取得 |
+| `utils/feature.ts` | ビルド対象ブラウザに基づく機能対応フラグ |
+| `utils/settings.ts` | 設定の型・読み書きと既定値 |
 | `tests/` | 単体・連携テスト |
-| `config/chrome-extension-key.pub` | Chrome の拡張機能 ID を固定する公開鍵（Base64） |
+| `chrome-extension-key.pub` | Chrome の拡張機能 ID を固定する公開鍵（Base64） |
 | `scripts/make-xpi.mjs` | Firefox 用 zip から未署名 XPI を作成 |
 | `.github/` | CI ワークフローと Release 判定スクリプト |
-| `src/assets/icon.svg` | 拡張機能アイコンの元データ（ビルド時にPNG生成） |
+| `assets/icon.svg` | 拡張機能アイコンの元データ（ビルド時にPNG生成） |
 | `tsconfig.json` | TypeScript の型検査設定 |
 | `wxt.config.ts` | Manifest V3、名前、権限、アイコン生成 |
 | `package.json` | npm scripts、開発依存 |
@@ -204,7 +204,7 @@ WXTの `browser` APIを使い、リンク文字列の取得とミドルクリッ
 
 ### `wxt.config.ts`
 
-現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。クリップボードへの書き込みに `clipboardWrite` を使い、読み取り権限は要求しない。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。`action` でツールバーボタンを定義し、クリックで設定画面を開く。`default_icon` にはビルド時に生成される PNG を指定する。Chrome では Service Worker からの書き込みに対応した 157 以上を対象とする。Chrome 用の manifest には `key` を含め、展開先のパスが変わっても拡張機能 ID が変わらないようにする。公開鍵は `config/chrome-extension-key.pub` に Base64 で置き、ビルド時に読み込む。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
+現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。クリップボードへの書き込みに `clipboardWrite` を使い、読み取り権限は要求しない。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。`action` でツールバーボタンを定義し、クリックで設定画面を開く。`default_icon` にはビルド時に生成される PNG を指定する。Chrome では Service Worker からの書き込みに対応した 157 以上を対象とする。Chrome 用の manifest には `key` を含め、展開先のパスが変わっても拡張機能 ID が変わらないようにする。公開鍵は `chrome-extension-key.pub` に Base64 で置き、ビルド時に読み込む。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` はプロジェクト直下からの相対パスで指定する。
 
 ### `package.json`
 

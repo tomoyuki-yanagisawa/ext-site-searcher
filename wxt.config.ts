@@ -2,10 +2,9 @@
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'wxt';
 
-const chromeExtensionKey = readFileSync('config/chrome-extension-key.pub', 'utf8').trim();
+const chromeExtensionKey = readFileSync('chrome-extension-key.pub', 'utf8').trim();
 
 export default defineConfig({
-  srcDir: 'src',
   outDir: 'dist',
   manifestVersion: 3,
   modules: ['@wxt-dev/auto-icons'],
