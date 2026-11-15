@@ -8,9 +8,13 @@ export function getMessage(key: MessageKey, substitutions?: string | string[]): 
 
 /**
  * `data-i18n` のテキストと `data-i18n-label` の aria-label を現在の言語に置き換える。
+ * document を渡したときは、あわせて `<html lang>` を UI 言語に合わせる。
  */
 export function localize(root: ParentNode = document): void {
-  document.documentElement.lang = browser.i18n.getUILanguage().toLowerCase().startsWith('ja') ? 'ja' : 'en';
+  if (root === document) {
+    const language = browser.i18n.getUILanguage().toLowerCase();
+    document.documentElement.lang = language.startsWith('ja') ? 'ja' : 'en';
+  }
 
   for (const element of root.querySelectorAll<HTMLElement>('[data-i18n]')) {
     const key = element.dataset.i18n as MessageKey | undefined;
