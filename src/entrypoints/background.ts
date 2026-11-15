@@ -102,6 +102,10 @@ export default defineBackground(() => {
     }
   });
 
+  browser.action.onClicked.addListener(async () => {
+    await browser.runtime.openOptionsPage();
+  });
+
   browser.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === MENU_OPTIONS_ID) {
       await browser.runtime.openOptionsPage();

@@ -69,6 +69,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 - 検索結果の開き方をラジオボタンで選択できる。初期値は「新しいタブ（現在のタブの右隣）」。
 - 検索語のクリップボードへのコピーを設定できる。初期値はオフで、オンの場合は既存の内容を上書きする。
 - 設定画面は埋め込みダイアログではなく、ブラウザのタブで開く（`options_ui.open_in_tab`）。
+- ツールバーのボタンからも設定画面を開ける。
 - 入力中は保存せず、「保存」でまとめて永続化する。設定の読み込み完了までは操作できない。
 - 変更があるまで「保存」は無効。保存に成功すると再度無効にする。
 - 保存結果または入力エラーを画面に表示する。
@@ -154,6 +155,8 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 ├── public/_locales/
 ├── config/
 │   └── chrome-extension-key.pub
+├── scripts/
+│   └── make-xpi.mjs
 ├── .github/
 │   ├── scripts/check-release.mjs
 │   └── workflows/build.yml
@@ -175,6 +178,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 | `src/utils/settings.ts` | 設定の型・読み書きと既定値 |
 | `tests/` | 単体・連携テスト |
 | `config/chrome-extension-key.pub` | Chrome の拡張機能 ID を固定する公開鍵（Base64） |
+| `scripts/make-xpi.mjs` | Firefox 用 zip から未署名 XPI を作成 |
 | `.github/` | CI ワークフローと Release 判定スクリプト |
 | `src/assets/icon.svg` | 拡張機能アイコンの元データ（ビルド時にPNG生成） |
 | `tsconfig.json` | TypeScript の型検査設定 |
@@ -192,6 +196,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 6. `openIn` が `"currentTab"` なら `browser.tabs.update()`、`"newTab"` または `"backgroundTab"` なら `browser.tabs.create()` で右隣に開く。`"backgroundTab"` では `active: false` を指定する。
    Firefox で `button === 1` の場合は設定にかかわらず右隣のバックグラウンドタブで開く（実機でのミドルクリック動作は未検証）。
 7. 設定項目のクリックでは `browser.runtime.openOptionsPage()` を使う。
+8. ツールバーのボタンをクリックすると `browser.action.onClicked` が発火し、同じく設定画面を開く。
 
 WXTの `browser` APIを使い、リンク文字列の取得とミドルクリックの判定は Firefox に限る。FirefoxのMV3バックグラウンド形式の違いはWXTに任せる。
 
@@ -199,7 +204,7 @@ WXTの `browser` APIを使い、リンク文字列の取得とミドルクリッ
 
 ### `wxt.config.ts`
 
-現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。クリップボードへの書き込みに `clipboardWrite` を使い、読み取り権限は要求しない。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。Chrome では Service Worker からの書き込みに対応した 157 以上を対象とする。Chrome 用の manifest には `key` を含め、展開先のパスが変わっても拡張機能 ID が変わらないようにする。公開鍵は `config/chrome-extension-key.pub` に Base64 で置き、ビルド時に読み込む。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
+現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。クリップボードへの書き込みに `clipboardWrite` を使い、読み取り権限は要求しない。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。`action` でツールバーボタンを定義し、クリックで設定画面を開く。`default_icon` にはビルド時に生成される PNG を指定する。Chrome では Service Worker からの書き込みに対応した 157 以上を対象とする。Chrome 用の manifest には `key` を含め、展開先のパスが変わっても拡張機能 ID が変わらないようにする。公開鍵は `config/chrome-extension-key.pub` に Base64 で置き、ビルド時に読み込む。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `src/assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` は `srcDir` からの相対パスで指定する。
 
 ### `package.json`
 
@@ -215,11 +220,12 @@ npm run build                # Chrome
 npm run build -- -b firefox # Firefox
 npm run zip                  # Chrome 用 zip
 npm run zip:firefox          # Firefox 用 zip
+npm run xpi:firefox          # Firefox 用 XPI（未署名）
 npm run typecheck            # 型検査
 npm test                     # 単体・連携テスト
 ```
 
-成果物は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、配布用 zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に生成される。
+成果物は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、配布用 zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に生成される。`npm run xpi:firefox` では `dist/site-search-<version>-firefox-unsigned.xpi` も作成される。
 
 GitHub Actions（`.github/workflows/build.yml`）は `test` / `version` / `release` の3ジョブで構成する。PR では `test`（型検査・テスト・zip 作成）のみ、`main` では `version` で未リリースか確認し、必要なら `release` が Firefox 用 zip を `site-search-<version>-firefox-unsigned.xpi` としてコピーし、`v<version>` タグと Release を自動作成する。XPI は未署名で、AMO の認証情報は不要。リリース済みのバージョンでは Release をスキップする。
 
@@ -235,6 +241,7 @@ Chrome と Firefox（Windows 7 では 115 ESR）で以下を手動確認する�
 - 無効なURL・空欄・`{query}` のないURLを保存できない。
 - 検索サイトを並び替えられ、右クリックメニューにその順で表示される。
 - 変更がないときは「保存」を押せない。
+- ツールバーのボタンから設定画面を開ける。
 - 必要以上の権限を要求しない。
 
 Firefox では加えて、文字列未選択のリンクを右クリックしてリンク文字列を検索できること、選択文字列が優先されること、サイト項目のミドルクリックでバックグラウンドに開くことを手動確認する。

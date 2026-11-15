@@ -31,6 +31,8 @@ Webページ上で選択した文字列を、右クリックメニューから�
 │   └── utils/     # 設定と検索 URL の共通処理
 ├── tests/         # 単体・連携テスト
 ├── public/_locales/ # 英語・日本語の翻訳
+├── config/        # ビルド設定（Chrome の公開鍵）
+├── scripts/       # ビルド補助スクリプト
 ├── .github/       # CI とリリース判定スクリプト
 ├── dist/          # ビルド成果物（gitignore）
 ├── .wxt/          # 型定義キャッシュ（gitignore）
@@ -69,7 +71,7 @@ npm run zip                  # Chrome 用
 npm run zip:firefox          # Firefox 用
 ```
 
-ビルド結果は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に出力されます。
+ビルド結果は `dist/chrome-mv3/` と `dist/firefox-mv3/` に、zip は `dist/site-search-*-chrome.zip` と `dist/site-search-*-firefox.zip` に出力されます。`npm run xpi:firefox` では、Firefox 用 zip から未署名の `dist/site-search-<version>-firefox-unsigned.xpi` も作成されます。
 
 `npm run build` / `npm run build -- -b firefox` でも、zip を作らずにディレクトリだけを出力できます。
 
@@ -142,6 +144,8 @@ Firefox では文字列を選択していなくても、リンクを右クリッ
 
 検索先は初期状態では空です。「サイトで検索」→「検索サイトを設定…」を開き、名前と検索URLを入力して保存してください。検索サイトは「↑」「↓」で並び替えでき、右クリックメニューはその順で表示されます。「保存」は変更があるときだけ押せます。
 
+ツールバーの Site Search ボタンからも設定画面を開けます。Firefox でボタンが見当たらない場合は、ツールバーの「…」からピン留めしてください。
+
 検索URLには `{query}` を含めます。`{query}` が選択文字列に置き換わります。
 
 ```text
@@ -159,6 +163,7 @@ npm run typecheck            # TypeScript の型検査
 npm test                     # 単体テスト
 npm run zip                  # Chrome 用 zip を作成
 npm run zip:firefox          # Firefox 用 zip を作成
+npm run xpi:firefox          # Firefox 用 XPI（未署名）を作成
 ```
 
 `npm install` 時に `wxt prepare` が実行され、型検査に必要な `.wxt/` の型定義が生成されます。
