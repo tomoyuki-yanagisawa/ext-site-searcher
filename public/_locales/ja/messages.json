@@ -2,6 +2,7 @@
   "extensionDescription": { "message": "選択した文字列を登録したサイトで検索" },
   "menuSearch": { "message": "サイトで検索" },
   "menuSettings": { "message": "検索サイトを設定…" },
+  "actionTitle": { "message": "検索サイトを設定" },
   "optionsTitle": { "message": "検索サイトの設定 - Site Search" },
   "heading": { "message": "検索サイトの設定" },
   "intro": { "message": "右クリックメニューから検索するサイトを登録します。" },

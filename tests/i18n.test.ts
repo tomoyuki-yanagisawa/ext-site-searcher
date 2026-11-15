@@ -27,7 +27,7 @@ describe('extension translations', () => {
   });
 
   it('defines the manifest and dynamic UI messages', () => {
-    for (const key of ['extensionDescription', 'menuSearch', 'menuSettings', 'saved', 'saveFailed', 'loadFailed', 'rowError']) {
+    for (const key of ['extensionDescription', 'menuSearch', 'menuSettings', 'actionTitle', 'saved', 'saveFailed', 'loadFailed', 'rowError']) {
       expect(en).toHaveProperty(key);
     }
   });
