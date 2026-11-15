@@ -20,7 +20,7 @@ describe('extension translations', () => {
   });
 
   it('defines every message referenced by the options HTML and validation', () => {
-    const html = readFileSync('src/entrypoints/options/index.html', 'utf8');
+    const html = readFileSync('entrypoints/options/index.html', 'utf8');
     const keys = [...html.matchAll(/data-i18n(?:-label)?="([^"]+)"/g)].map((match) => match[1]);
     keys.push('nameRequired', 'urlRequired', 'queryRequired', 'urlInvalid', 'urlProtocol');
     for (const key of keys) expect(en).toHaveProperty(key!);
