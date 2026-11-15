@@ -1,16 +1,17 @@
 import { getSettings, normalizeOpenIn, saveSettings, type Site } from '../../utils/settings';
 import { validateSite } from '../../utils/search-url';
+import { requiredElement } from '../../utils/dom';
 import { browser } from 'wxt/browser';
 import './style.css';
 
-const form = document.querySelector<HTMLFormElement>('#site-form')!;
-const sitesContainer = document.querySelector<HTMLElement>('#sites')!;
-const siteRow = document.querySelector<HTMLTemplateElement>('#site-row')!;
-const copyQueryInput = document.querySelector<HTMLInputElement>('#copy-query')!;
-const emptyState = document.querySelector<HTMLElement>('#empty')!;
-const addButton = document.querySelector<HTMLButtonElement>('#add')!;
-const saveButton = document.querySelector<HTMLButtonElement>('#save')!;
-const message = document.querySelector<HTMLElement>('#message')!;
+const form = requiredElement<HTMLFormElement>(document, '#site-form');
+const sitesContainer = requiredElement<HTMLElement>(document, '#sites');
+const siteRow = requiredElement<HTMLTemplateElement>(document, '#site-row');
+const copyQueryInput = requiredElement<HTMLInputElement>(document, '#copy-query');
+const emptyState = requiredElement<HTMLElement>(document, '#empty');
+const addButton = requiredElement<HTMLButtonElement>(document, '#add');
+const saveButton = requiredElement<HTMLButtonElement>(document, '#save');
+const message = requiredElement<HTMLElement>(document, '#message');
 
 function translate(root: ParentNode): void {
   type MessageKey = Parameters<typeof browser.i18n.getMessage>[0];
@@ -30,8 +31,8 @@ function updateRowState(): void {
   const rows = [...sitesContainer.querySelectorAll('li')];
   emptyState.hidden = rows.length > 0;
   rows.forEach((row, index) => {
-    row.querySelector<HTMLButtonElement>('[data-action="move-up"]')!.disabled = index === 0;
-    row.querySelector<HTMLButtonElement>('[data-action="move-down"]')!.disabled = index === rows.length - 1;
+    requiredElement<HTMLButtonElement>(row, '[data-action="move-up"]').disabled = index === 0;
+    requiredElement<HTMLButtonElement>(row, '[data-action="move-down"]').disabled = index === rows.length - 1;
   });
 }
 
@@ -45,9 +46,12 @@ function setDirty(dirty: boolean): void {
 }
 
 function appendRow(site: Site = { name: '', url: '' }): HTMLLIElement {
-  const row = siteRow.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
-  row.querySelector<HTMLInputElement>('input[name="name"]')!.value = site.name;
-  row.querySelector<HTMLInputElement>('input[name="url"]')!.value = site.url;
+  const row = siteRow.content.firstElementChild?.cloneNode(true);
+  if (!(row instanceof HTMLLIElement)) {
+    throw new Error('site-row template is missing');
+  }
+  requiredElement<HTMLInputElement>(row, 'input[name="name"]').value = site.name;
+  requiredElement<HTMLInputElement>(row, 'input[name="url"]').value = site.url;
   sitesContainer.append(row);
   return row;
 }
@@ -76,8 +80,8 @@ form.addEventListener('submit', async (event) => {
   const sites: Site[] = [];
 
   for (const [index, row] of rows.entries()) {
-    const nameInput = row.querySelector<HTMLInputElement>('input[name="name"]')!;
-    const urlInput = row.querySelector<HTMLInputElement>('input[name="url"]')!;
+    const nameInput = requiredElement<HTMLInputElement>(row, 'input[name="name"]');
+    const urlInput = requiredElement<HTMLInputElement>(row, 'input[name="url"]');
     const site = { name: nameInput.value, url: urlInput.value };
     const error = validateSite(site);
 
@@ -145,8 +149,8 @@ sitesContainer.addEventListener('click', (event) => {
 form.addEventListener('input', () => setDirty(true));
 
 loadSettings().catch((error: unknown) => {
-  form.querySelectorAll('input, button').forEach((element) => {
-    (element as HTMLInputElement | HTMLButtonElement).disabled = true;
+  form.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button').forEach((element) => {
+    element.disabled = true;
   });
   form.inert = false;
   const detail = error instanceof Error ? error.message : String(error);
