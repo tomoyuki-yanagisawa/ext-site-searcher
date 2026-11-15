@@ -1,6 +1,7 @@
 import { browser, type Browser } from 'wxt/browser';
 import { getSettings, type OpenIn } from '../utils/settings';
 import { searchUrl } from '../utils/search-url';
+import { getMessage } from '../utils/i18n';
 
 // ビルド対象ブラウザに基づく機能対応。Firefox のみが対象。
 const supportsLinkText = import.meta.env.BROWSER === 'firefox';
@@ -44,7 +45,7 @@ async function rebuildMenus(): Promise<void> {
   await browser.contextMenus.removeAll();
   await createMenuItem({
     id: MENU_ROOT_ID,
-    title: browser.i18n.getMessage('menuSearch'),
+    title: getMessage('menuSearch'),
     contexts,
   });
 
@@ -69,7 +70,7 @@ async function rebuildMenus(): Promise<void> {
   await createMenuItem({
     id: MENU_OPTIONS_ID,
     parentId: MENU_ROOT_ID,
-    title: browser.i18n.getMessage('menuSettings'),
+    title: getMessage('menuSettings'),
     contexts,
   });
 }
