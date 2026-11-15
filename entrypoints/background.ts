@@ -1,7 +1,10 @@
 import { browser, type Browser } from 'wxt/browser';
 import { getSettings, type OpenIn } from '../utils/settings';
 import { searchUrl } from '../utils/search-url';
-import { supportsLinkText, supportsMenuClickButton } from '../utils/feature';
+
+// ビルド対象ブラウザに基づく機能対応。Firefox のみが対象。
+const supportsLinkText = import.meta.env.BROWSER === 'firefox';
+const supportsMenuClickButton = import.meta.env.BROWSER === 'firefox';
 
 const MENU_ROOT_ID = 'site-search';
 const MENU_OPTIONS_ID = 'site-search-options';

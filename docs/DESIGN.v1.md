@@ -147,8 +147,6 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 │       ├── main.ts
 │       └── style.css
 ├── utils/
-│   ├── dom.ts
-│   ├── feature.ts
 │   ├── search-url.ts
 │   └── settings.ts
 ├── tests/
@@ -173,8 +171,6 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 | `entrypoints/options/main.ts` | 追加・編集・削除・バリデーション・保存 |
 | `entrypoints/options/style.css` | 設定画面のスタイル（OS / ブラウザ標準に寄せる） |
 | `utils/search-url.ts` | 検索URLの検証と生成 |
-| `utils/dom.ts` | 必須 DOM 要素の取得 |
-| `utils/feature.ts` | ビルド対象ブラウザに基づく機能対応フラグ |
 | `utils/settings.ts` | 設定の型・読み書きと既定値 |
 | `tests/` | 単体・連携テスト |
 | `chrome-extension-key.pub` | Chrome の拡張機能 ID を固定する公開鍵（Base64） |
