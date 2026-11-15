@@ -20,7 +20,7 @@ Webページ上で選択した文字列を、右クリックメニューから�
 
 React や Content Script は使わず、必要な共通処理は小さなユーティリティとして実装する。
 
-表示言語はブラウザの言語設定に従い、日本語と英語に対応する。その他の言語は英語を使う。翻訳は `public/_locales/` に置き、WebExtensions の i18n API を使用する。メッセージ取得と `data-i18n` の適用は `utils/i18n.ts` にまとめる。ユーザーが登録したサイト名や URL は翻訳しない。
+表示言語はブラウザの言語設定に従い、日本語と英語に対応する。その他の言語は英語を使う。翻訳は `public/_locales/` に置き、WebExtensions の i18n API を使用する。メッセージ取得と `data-i18n` の適用は `utils/i18n.ts` にまとめる。`localize` は document を渡したときだけ `<html lang>` を設定する。ユーザーが登録したサイト名や URL は翻訳しない。
 
 ## 3. 機能
 
