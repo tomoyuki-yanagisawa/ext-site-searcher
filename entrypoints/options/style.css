@@ -1,10 +1,10 @@
 /*
- * HTML は class なし。要素・ID・属性セレクタだけで最低限のレイアウトを行う。
  * 色はシステムカラー、フォーム部品はブラウザ標準の描画に任せる。
+ * レイアウトはクラスで指定し、余白・文字サイズは rem で揃える。
  */
 :root {
   color-scheme: light dark;
-  --border: rgba(0, 0, 0, 0.2);
+  --border: color-mix(in srgb, CanvasText 20%, transparent);
 }
 
 * {
@@ -12,57 +12,55 @@
 }
 
 body {
-  margin: 0;
+  max-width: 55rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3.5rem;
   background: Canvas;
   color: CanvasText;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 13px;
+  /* 既定 16px で 13px。ブラウザの文字サイズ設定に追従する。 */
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 
-header,
-main {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
 header {
-  padding-top: 32px;
-  margin-bottom: 16px;
-}
-
-main {
-  padding-bottom: 56px;
+  margin-bottom: 1rem;
 }
 
 h1 {
-  margin: 0 0 4px;
-  font-size: 22px;
+  margin: 0 0 0.25rem;
+  font-size: 1.375rem;
   font-weight: 600;
   line-height: 1.3;
 }
 
 header p {
   margin: 0;
+}
+
+p {
+  margin: 0 0 0.625rem;
+}
+
+.hint {
   color: GrayText;
 }
 
 fieldset {
   min-inline-size: 0;
   margin: 0;
-  padding: 16px;
+  padding: 1rem;
   border: 1px solid var(--border);
-  border-radius: 4px;
-}
-
-legend {
-  padding: 0 4px;
-  font-weight: 600;
+  border-radius: 0.25rem;
 }
 
 form > fieldset + fieldset {
-  margin-top: 16px;
+  margin-top: 1rem;
+}
+
+legend {
+  padding: 0 0.25rem;
+  font-weight: 600;
 }
 
 fieldset label {
@@ -70,66 +68,60 @@ fieldset label {
 }
 
 fieldset label + label {
-  margin-top: 4px;
+  margin-top: 0.25rem;
 }
 
 fieldset input[type="radio"] {
-  margin: 0 6px 0 0;
-}
-
-fieldset > p {
-  margin: 0 0 10px;
-  color: GrayText;
-  font-size: 12px;
+  margin: 0 0.375rem 0 0;
 }
 
 #sites {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-#sites li {
+.site-row {
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) minmax(260px, 2.5fr) auto auto auto;
-  gap: 8px;
+  grid-template-columns: minmax(8.75rem, 1fr) minmax(16.25rem, 2.5fr) auto;
+  gap: 0.5rem;
   align-items: center;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 input[type="text"] {
   width: 100%;
   min-width: 0;
-  padding: 3px 6px;
+  padding: 0.1875rem 0.375rem;
   font: inherit;
 }
 
 button {
-  padding: 3px 12px;
+  padding: 0.1875rem 0.75rem;
   font: inherit;
   cursor: pointer;
 }
 
 #empty {
   margin: 0;
-  color: GrayText;
-}
-
-#empty[hidden] {
-  display: none;
 }
 
 #add {
-  margin-top: 10px;
+  margin-top: 0.625rem;
 }
 
 footer {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 16px;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 #message {
@@ -138,45 +130,29 @@ footer {
 }
 
 #message[data-error] {
-  color: #c00;
+  color: ActiveText;
 }
 
 footer button {
   margin-left: auto;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --border: rgba(255, 255, 255, 0.2);
+@media (max-width: 40rem) {
+  body {
+    padding: 1rem;
   }
 
-  #message[data-error] {
-    color: #ff6b6b;
-  }
-}
-
-@media (max-width: 640px) {
-  header,
-  main {
-    padding-right: 16px;
-    padding-left: 16px;
-  }
-
-  h1 {
-    font-size: 20px;
-  }
-
-  #sites li {
+  .site-row {
     display: flex;
     flex-wrap: wrap;
   }
 
-  #sites input[name="name"],
-  #sites input[name="url"] {
+  .site-name,
+  .site-url {
     flex: 1 1 100%;
   }
 
-  #sites button[data-action="delete"] {
+  .row-actions {
     margin-left: auto;
   }
 }
