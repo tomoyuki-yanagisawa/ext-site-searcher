@@ -20,7 +20,7 @@ Webページ上で選択した文字列を、右クリックメニューから�
 
 React や Content Script は使わず、必要な共通処理は小さなユーティリティとして実装する。
 
-表示言語はブラウザの言語設定に従い、日本語と英語に対応する。その他の言語は英語を使う。翻訳は `public/_locales/` に置き、WebExtensions の i18n API を使用する。ユーザーが登録したサイト名や URL は翻訳しない。
+表示言語はブラウザの言語設定に従い、日本語と英語に対応する。その他の言語は英語を使う。翻訳は `public/_locales/` に置き、WebExtensions の i18n API を使用する。メッセージ取得と `data-i18n` の適用は `utils/i18n.ts` にまとめる。ユーザーが登録したサイト名や URL は翻訳しない。
 
 ## 3. 機能
 
@@ -147,6 +147,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 │       ├── main.ts
 │       └── style.css
 ├── utils/
+│   ├── i18n.ts
 │   ├── search-url.ts
 │   └── settings.ts
 ├── tests/
@@ -170,6 +171,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 | `entrypoints/options/index.html` | 設定画面のマークアップ |
 | `entrypoints/options/main.ts` | 追加・編集・削除・バリデーション・保存 |
 | `entrypoints/options/style.css` | 設定画面のスタイル（OS / ブラウザ標準に寄せる） |
+| `utils/i18n.ts` | 翻訳の取得と `data-i18n` の適用 |
 | `utils/search-url.ts` | 検索URLの検証と生成 |
 | `utils/settings.ts` | 設定の型・読み書きと既定値 |
 | `tests/` | 単体・連携テスト |

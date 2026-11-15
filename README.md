@@ -27,7 +27,7 @@ Webページ上で選択した文字列を、右クリックメニューから�
 │       ├── index.html
 │       ├── main.ts
 │       └── style.css
-├── utils/         # 設定と検索 URL の共通処理
+├── utils/         # 設定・検索 URL・翻訳の共通処理
 ├── tests/         # 単体・連携テスト
 ├── public/_locales/ # 英語・日本語の翻訳
 ├── scripts/       # ビルド補助スクリプト
