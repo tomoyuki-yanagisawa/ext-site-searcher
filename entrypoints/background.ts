@@ -1,7 +1,8 @@
 import { browser, type Browser } from 'wxt/browser';
-import { getSettings, type OpenIn } from '../utils/settings';
+import { getSettings } from '../utils/settings';
 import { searchUrl } from '../utils/search-url';
 import { getMessage } from '../utils/i18n';
+import { openSearch } from '../utils/open-search';
 
 // ビルド対象ブラウザに基づく機能対応。Firefox のみが対象。
 const supportsLinkText = import.meta.env.BROWSER === 'firefox';
@@ -82,20 +83,6 @@ function enqueueMenuUpdate(): Promise<void> {
   return menuUpdateQueue;
 }
 
-async function openSearch(url: string, openIn: OpenIn, middleClick: boolean, tab?: Browser.tabs.Tab): Promise<void> {
-  const background = openIn === 'backgroundTab' || middleClick;
-  if (!background && openIn === 'currentTab' && tab?.id !== undefined) {
-    await browser.tabs.update(tab.id, { url });
-  } else {
-    await browser.tabs.create({
-      url,
-      windowId: tab?.windowId,
-      index: tab ? tab.index + 1 : undefined,
-      ...(background ? { active: false } : {}),
-    });
-  }
-}
-
 export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(enqueueMenuUpdate);
   browser.runtime.onStartup.addListener(enqueueMenuUpdate);
@@ -104,10 +91,6 @@ export default defineBackground(() => {
     if (areaName === 'local' && changes.sites) {
       enqueueMenuUpdate();
     }
-  });
-
-  browser.action.onClicked.addListener(async () => {
-    await browser.runtime.openOptionsPage();
   });
 
   browser.contextMenus.onClicked.addListener(async (info, tab) => {

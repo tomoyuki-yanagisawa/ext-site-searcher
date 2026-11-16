@@ -12,7 +12,6 @@ describe('background menus', () => {
   let copyQuery: boolean;
   let menus: Menu[];
   let click: Click;
-  let actionClick: (() => Promise<void>) | undefined;
   let changed: (changes: object, area: string) => void;
   let startup: () => Promise<void>;
   let createTab: ReturnType<typeof vi.fn>;
@@ -27,7 +26,6 @@ describe('background menus', () => {
     openIn = 'newTab';
     copyQuery = false;
     menus = [];
-    actionClick = undefined;
     createTab = vi.fn().mockResolvedValue(undefined);
     updateTab = vi.fn().mockResolvedValue(undefined);
     openOptions = vi.fn().mockResolvedValue(undefined);
@@ -43,9 +41,6 @@ describe('background menus', () => {
         onInstalled: { addListener: (listener: typeof startup) => { startup = listener; } },
         onStartup: { addListener: vi.fn() },
         openOptionsPage: openOptions,
-      },
-      action: {
-        onClicked: { addListener: (listener: () => Promise<void>) => { actionClick = listener; } },
       },
       contextMenus: {
         removeAll: vi.fn(async () => { menus = []; }),
@@ -182,12 +177,6 @@ describe('background menus', () => {
     await click({ menuItemId: 'site-search-options' });
     await click({ menuItemId: 'site-index-0-%broken', selectionText: 'test' });
     await click({ menuItemId: menuId('Google') });
-    expect(openOptions).toHaveBeenCalledOnce();
-    expect(createTab).not.toHaveBeenCalled();
-  });
-
-  it('opens options from the toolbar button', async () => {
-    await actionClick!();
     expect(openOptions).toHaveBeenCalledOnce();
     expect(createTab).not.toHaveBeenCalled();
   });

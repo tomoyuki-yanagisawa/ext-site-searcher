@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-Webページ上で選択した文字列を、右クリックメニューから任意のサイトで検索するChrome・Firefox用のブラウザ拡張機能。Firefox ではリンクの表示文字列の検索にも対応する。
+Webページ上で選択した文字列やクリップボードの文字列を、右クリックメニューやツールバーから任意のサイトで検索するChrome・Firefox用のブラウザ拡張機能。Firefox ではリンクの表示文字列の検索にも対応する。
 
 検索先は設定画面で自由に追加・編集・削除でき、検索結果は現在のタブまたは右隣の前面・バックグラウンドタブで開く。
 
@@ -44,7 +44,19 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 - 初期設定は空。設定画面から検索先を登録する。
 - 「検索サイトを設定…」でOptions画面を開く。
 
-#### 3.1.2 設定画面
+#### 3.1.2 ツールバー popup
+
+ツールバーのボタンを押すと popup を開き、クリップボードの文字列を登録サイトで検索する。
+
+- 開いたときに一度だけ `navigator.clipboard.readText()` でクリップボードを読む。
+- 先頭160文字までのプレビューを表示する。
+- 登録サイトを一覧表示し、選んだサイトで検索を開く。開き方は `openIn` に従う。
+- クリップボードが空、読み取れない、サイト未登録の場合は状態を表示する。
+- `Settings` で設定画面を開く。閉じるボタンで popup を閉じる。
+- 読み取った内容は保存もログ出力もしない。`copyQuery` は適用しない。
+- `clipboardRead` を必須権限として要求する。
+
+#### 3.1.3 設定画面
 
 名前とURLテンプレートの一覧を表示する。
 
@@ -69,7 +81,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 - 検索結果の開き方をラジオボタンで選択できる。初期値は「新しいタブ（現在のタブの右隣）」。
 - 検索語のクリップボードへのコピーを設定できる。初期値はオフで、オンの場合は既存の内容を上書きする。
 - 設定画面は埋め込みダイアログではなく、ブラウザのタブで開く（`options_ui.open_in_tab`）。
-- ツールバーのボタンからも設定画面を開ける。
+- popup の `Settings` から設定画面を開ける。
 - 入力中は保存せず、「保存」でまとめて永続化する。設定の読み込み完了までは操作できない。
 - 変更があるまで「保存」は無効。保存に成功すると再度無効にする。
 - 保存結果または入力エラーを画面に表示する。
@@ -77,7 +89,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 - 色はシステムカラー、余白と文字サイズは rem を使い、ブラウザの設定に追従させる。文字サイズの基準は 0.875rem とする。
 - CSSは `options/style.css` に記述し、`options/main.ts` から import する。
 
-#### 3.1.3 URLテンプレート
+#### 3.1.4 URLテンプレート
 
 `{query}` を `encodeURIComponent(検索語)` に置き換える。検索語は通常は選択文字列で、Firefox では選択文字列がない場合にリンク文字列も使う。
 
@@ -133,6 +145,7 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 - `copyQuery` は検索語のコピーを有効にする真偽値。未設定や不正な値は `false` として扱う。
 - サイトのメニューIDは `site-index-<インデックス>` とする。クリック時は最新の設定の同じインデックスのサイトを使う。設定変更直後は、更新前のメニューをクリックすると新しい並び順のサイトが開く可能性がある。
 - 親メニューは `site-search`、設定項目は `site-search-options`、区切り線は `site-search-separator` とする。
+- クリップボードの内容は保存しない。popup を開いたときだけ読み取り、検索語として選択サイトへ送る。
 - 同期やサーバーへの送信は行わない（検索時の検索語は検索先サイトに渡される）。
 
 ## 5. 構成
@@ -143,12 +156,19 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 │   └── icon.svg
 ├── entrypoints/
 │   ├── background.ts
-│   └── options/
+│   ├── options/
+│   │   ├── index.html
+│   │   ├── main.ts
+│   │   └── style.css
+│   └── popup/
 │       ├── index.html
 │       ├── main.ts
 │       └── style.css
 ├── utils/
+│   ├── clipboard.ts
+│   ├── dom.ts
 │   ├── i18n.ts
+│   ├── open-search.ts
 │   ├── search-url.ts
 │   └── settings.ts
 ├── tests/
@@ -172,7 +192,13 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 | `entrypoints/options/index.html` | 設定画面のマークアップ |
 | `entrypoints/options/main.ts` | 追加・編集・削除・バリデーション・保存 |
 | `entrypoints/options/style.css` | 設定画面のスタイル（OS / ブラウザ標準に寄せる） |
+| `entrypoints/popup/index.html` | ツールバー popup のマークアップ |
+| `entrypoints/popup/main.ts` | クリップボードの読み取りと検索メニューの表示 |
+| `entrypoints/popup/style.css` | ツールバー popup のスタイル |
+| `utils/clipboard.ts` | クリップボード文字列の正規化とプレビュー |
+| `utils/dom.ts` | 必須 DOM 要素の取得 |
 | `utils/i18n.ts` | 翻訳の取得と `data-i18n` の適用 |
+| `utils/open-search.ts` | 検索結果を開く共通処理 |
 | `utils/search-url.ts` | 検索URLの検証と生成 |
 | `utils/settings.ts` | 設定の型・読み書きと既定値 |
 | `tests/` | 単体・連携テスト |
@@ -195,7 +221,9 @@ Chrome・Firefox 共通で、テキスト選択時に次のメニューを表示
 6. `openIn` が `"currentTab"` なら `browser.tabs.update()`、`"newTab"` または `"backgroundTab"` なら `browser.tabs.create()` で右隣に開く。`"backgroundTab"` では `active: false` を指定する。
    Firefox で `button === 1` の場合は設定にかかわらず右隣のバックグラウンドタブで開く（実機でのミドルクリック動作は未検証）。
 7. 設定項目のクリックでは `browser.runtime.openOptionsPage()` を使う。
-8. ツールバーのボタンをクリックすると `browser.action.onClicked` が発火し、同じく設定画面を開く。
+8. ツールバーのボタンは popup を開く。popup は設定を読み、サイトがなければ未登録状態を表示する。
+9. サイトがあればクリップボードを読み、空白を正規化してプレビューとサイト一覧を表示する。空・読み取り失敗時は状態を表示する。
+10. サイトを選ぶと `utils/open-search.ts` の `openSearch()` で検索を開き、popup を閉じる。`Settings` は設定画面を開く。
 
 WXTの `browser` APIを使い、リンク文字列の取得とミドルクリックの判定は Firefox に限る。FirefoxのMV3バックグラウンド形式の違いはWXTに任せる。
 
@@ -203,7 +231,7 @@ WXTの `browser` APIを使い、リンク文字列の取得とミドルクリッ
 
 ### `wxt.config.ts`
 
-現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。クリップボードへの書き込みに `clipboardWrite` を使い、読み取り権限は要求しない。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。`action` でツールバーボタンを定義し、クリックで設定画面を開く。`default_icon` にはビルド時に生成される PNG を指定する。Chrome では Service Worker からの書き込みに対応した 157 以上を対象とする。Chrome 用の manifest には `key` を含め、展開先のパスが変わっても拡張機能 ID が変わらないようにする。公開鍵は `chrome-extension-key.pub` に Base64 で置き、ビルド時に読み込む。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` はプロジェクト直下からの相対パスで指定する。
+現在の設定は [`wxt.config.ts`](../wxt.config.ts) を参照する。クリップボードへの書き込みに `clipboardWrite`、popup での読み取りに `clipboardRead` を使う。`host_permissions`、`tabs`、`activeTab`、`scripting` は不要。`action` でツールバーボタンを定義し、popup を開く。`default_popup` は popup entrypoint から生成される。`default_icon` にはビルド時に生成される PNG を指定する。Chrome では Service Worker からの書き込みに対応した 157 以上を対象とする。Chrome 用の manifest には `key` を含め、展開先のパスが変わっても拡張機能 ID が変わらないようにする。公開鍵は `chrome-extension-key.pub` に Base64 で置き、ビルド時に読み込む。Firefox ではAMOの要件に合わせて `browser_specific_settings` を設定する。`strict_min_version` は Windows 7 で利用できる最後の Firefox 115 に合わせる。アイコンは `assets/icon.svg` から `@wxt-dev/auto-icons` がビルド時に生成する（Chrome は manifest のアイコンとして SVG を扱えないため）。`baseIconPath` はプロジェクト直下からの相対パスで指定する。
 
 ### `package.json`
 
@@ -240,8 +268,10 @@ Chrome と Firefox（Windows 7 では 115 ESR）で以下を手動確認する�
 - 無効なURL・空欄・`{query}` のないURLを保存できない。
 - 検索サイトを並び替えられ、右クリックメニューにその順で表示される。
 - 変更がないときは「保存」を押せない。
-- ツールバーのボタンから設定画面を開ける。
-- 必要以上の権限を要求しない。
+- ツールバーのボタンで popup が開き、クリップボードの文字列で検索できる。
+- クリップボードが空・読み取り失敗・サイト未登録の場合に状態が表示される。
+- popup の `Settings` から設定画面を開ける。
+- 要求する権限は目的に必要なものだけ（`clipboardRead` を含む）。
 
 Firefox では加えて、文字列未選択のリンクを右クリックしてリンク文字列を検索できること、選択文字列が優先されること、サイト項目のミドルクリックでバックグラウンドに開くことを手動確認する。
 

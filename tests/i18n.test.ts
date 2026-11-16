@@ -19,15 +19,16 @@ describe('extension translations', () => {
     }
   });
 
-  it('defines every message referenced by the options HTML and validation', () => {
-    const html = readFileSync('entrypoints/options/index.html', 'utf8');
-    const keys = [...html.matchAll(/data-i18n(?:-label)?="([^"]+)"/g)].map((match) => match[1]);
+  it('defines every message referenced by the UI HTML and validation', () => {
+    const keys = ['entrypoints/options/index.html', 'entrypoints/popup/index.html'].flatMap((file) =>
+      [...readFileSync(file, 'utf8').matchAll(/data-i18n(?:-label)?="([^"]+)"/g)].map((match) => match[1]),
+    );
     keys.push('nameRequired', 'urlRequired', 'queryRequired', 'urlInvalid', 'urlProtocol');
     for (const key of keys) expect(en).toHaveProperty(key!);
   });
 
   it('defines the manifest and dynamic UI messages', () => {
-    for (const key of ['extensionDescription', 'menuSearch', 'menuSettings', 'actionTitle', 'saved', 'saveFailed', 'loadFailed', 'rowError']) {
+    for (const key of ['extensionDescription', 'menuSearch', 'menuSettings', 'actionTitle', 'saved', 'saveFailed', 'loadFailed', 'rowError', 'popupEmpty', 'popupReadFailed', 'popupNoSites']) {
       expect(en).toHaveProperty(key);
     }
   });

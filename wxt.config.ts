@@ -17,7 +17,7 @@ export default defineConfig({
     name: 'Site Search',
     description: '__MSG_extensionDescription__',
     default_locale: 'en',
-    permissions: ['contextMenus', 'storage', 'clipboardWrite'],
+    permissions: ['contextMenus', 'storage', 'clipboardWrite', 'clipboardRead'],
     action: {
       default_title: '__MSG_actionTitle__',
       default_icon: {
