@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search site settings - design sample</title>
+    <link rel="stylesheet" href="../entrypoints/options/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Search site settings</h1>
+      <p class="hint">Add sites to search from the context menu.</p>
+    </header>
+
+    <main>
+      <form id="site-form" novalidate>
+        <fieldset>
+          <legend>Open search results in</legend>
+          <label>
+            <input type="radio" name="openIn" value="newTab" checked />
+            <span>A new tab to the right of the current tab</span>
+          </label>
+          <label>
+            <input type="radio" name="openIn" value="currentTab" />
+            <span>The current tab</span>
+          </label>
+          <label>
+            <input type="radio" name="openIn" value="backgroundTab" />
+            <span>A background tab to the right of the current tab</span>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Clipboard</legend>
+          <label>
+            <input id="copy-query" type="checkbox" />
+            <span>Copy the search text to the clipboard</span>
+          </label>
+          <p class="hint">This replaces the current clipboard contents.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Search sites</legend>
+          <p class="hint">{query} is replaced with the selected text.</p>
+
+          <ol id="sites">
+            <li class="site-row">
+              <input class="site-name" type="text" value="Google" aria-label="Name" />
+              <input class="site-url" type="text" value="https://www.google.com/search?q={query}" aria-label="Search URL" />
+              <div class="row-actions">
+                <button type="button" aria-label="Move up" disabled>↑</button>
+                <button type="button" aria-label="Move down">↓</button>
+                <button type="button">Delete</button>
+              </div>
+            </li>
+            <li class="site-row">
+              <input class="site-name" type="text" value="Wikipedia" aria-label="Name" />
+              <input class="site-url" type="text" value="https://ja.wikipedia.org/w/index.php?search={query}" aria-label="Search URL" />
+              <div class="row-actions">
+                <button type="button" aria-label="Move up">↑</button>
+                <button type="button" aria-label="Move down">↓</button>
+                <button type="button">Delete</button>
+              </div>
+            </li>
+            <li class="site-row">
+              <input class="site-name" type="text" value="GitHub" aria-label="Name" />
+              <input class="site-url" type="text" value="https://github.com/search?q={query}" aria-label="Search URL" />
+              <div class="row-actions">
+                <button type="button" aria-label="Move up">↑</button>
+                <button type="button" aria-label="Move down" disabled>↓</button>
+                <button type="button">Delete</button>
+              </div>
+            </li>
+          </ol>
+
+          <p id="empty" class="hint" hidden>No search sites yet. Use Add site to add one.</p>
+
+          <button id="add" type="button">＋ Add site</button>
+        </fieldset>
+
+        <footer>
+          <p id="message" role="status" aria-live="polite"></p>
+          <button id="save" type="submit" disabled>Save</button>
+        </footer>
+      </form>
+    </main>
+  </body>
+</html>
