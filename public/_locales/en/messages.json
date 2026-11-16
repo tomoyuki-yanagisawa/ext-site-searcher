@@ -6,6 +6,7 @@
   "popupSearchLabel": { "message": "Search with clipboard contents" },
   "popupEmpty": { "message": "The clipboard has no text." },
   "popupReadFailed": { "message": "Couldn't read the clipboard." },
+  "popupRetry": { "message": "Try again" },
   "popupNoSites": { "message": "No search sites yet." },
   "popupSettings": { "message": "Settings" },
   "close": { "message": "Close" },

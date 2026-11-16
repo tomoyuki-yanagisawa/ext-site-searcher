@@ -6,6 +6,7 @@
   "popupSearchLabel": { "message": "クリップボードの内容で検索" },
   "popupEmpty": { "message": "クリップボードに文字がありません。" },
   "popupReadFailed": { "message": "クリップボードを読み取れませんでした。" },
+  "popupRetry": { "message": "再試行" },
   "popupNoSites": { "message": "検索サイトがまだ登録されていません。" },
   "popupSettings": { "message": "設定" },
   "close": { "message": "閉じる" },
