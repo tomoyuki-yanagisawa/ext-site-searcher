@@ -110,9 +110,10 @@ h1 {
   overflow: hidden;
   margin: 0 1rem 0.75rem;
   padding: 0.5rem 0.625rem;
+  border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: var(--hover);
-  color: GrayText;
+  background: Canvas;
+  color: CanvasText;
   font-size: 0.8125rem;
   line-height: 1.4;
   -webkit-box-orient: vertical;

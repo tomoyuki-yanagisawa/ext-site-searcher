@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Site Search</title>
+  </head>
+  <body>
+    <header class="popup-header">
+      <span class="popup-title">Site Search</span>
+      <button id="close" class="popup-close" type="button" aria-label="Close" data-i18n-label="close">×</button>
+    </header>
+
+    <p class="label" data-i18n="popupSearchLabel">Search with clipboard contents</p>
+    <p id="preview" class="preview" hidden></p>
+    <p id="empty" class="empty" role="status" aria-live="polite" hidden></p>
+    <ul id="sites" class="menu" hidden></ul>
+
+    <hr id="separator" hidden />
+    <div class="menu-footer">
+      <button id="settings" type="button" data-i18n="popupSettings">Settings</button>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

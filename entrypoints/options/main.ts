@@ -1,15 +1,8 @@
 import { getSettings, normalizeOpenIn, saveSettings, type Site } from '../../utils/settings';
 import { validateSite } from '../../utils/search-url';
 import { getMessage, localize } from '../../utils/i18n';
+import { requiredElement } from '../../utils/dom';
 import './style.css';
-
-function requiredElement<T extends Element>(root: ParentNode, selector: string): T {
-  const element = root.querySelector<T>(selector);
-  if (!element) {
-    throw new Error(`Element not found: ${selector}`);
-  }
-  return element;
-}
 
 const form = requiredElement<HTMLFormElement>(document, '#site-form');
 const sitesContainer = requiredElement<HTMLElement>(document, '#sites');
