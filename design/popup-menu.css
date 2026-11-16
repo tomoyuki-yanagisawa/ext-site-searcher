@@ -1,0 +1,140 @@
+/*
+ * Static prototype for a toolbar popup.
+ * System colors and rem sizing; light/dark follows the OS.
+ */
+:root {
+  color-scheme: light dark;
+  --border: color-mix(in srgb, CanvasText 16%, transparent);
+  --hover: color-mix(in srgb, CanvasText 7%, Canvas);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 2rem;
+  background: color-mix(in srgb, Canvas 95%, CanvasText);
+  color: CanvasText;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.page-header p {
+  margin: 0;
+  color: GrayText;
+}
+
+.variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-top: 1.5rem;
+}
+
+.variant {
+  width: 20rem;
+  max-width: 100%;
+}
+
+.variant h2 {
+  margin: 0 0 0.5rem;
+  color: GrayText;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.popup {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: Canvas;
+}
+
+.label {
+  margin: 0.75rem 1rem 0.25rem;
+  color: GrayText;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.preview {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 1rem 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.375rem;
+  background: var(--hover);
+  color: GrayText;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.menu {
+  margin: 0;
+  padding: 0 0.5rem;
+  list-style: none;
+}
+
+.menu button,
+.menu-footer button {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu button:hover,
+.menu-footer button:hover {
+  background: var(--hover);
+}
+
+.menu button:focus-visible,
+.menu-footer button:focus-visible {
+  outline: 2px solid Highlight;
+  outline-offset: -2px;
+}
+
+hr {
+  margin: 0.5rem 0.75rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.menu-footer {
+  padding: 0 0.5rem 0.5rem;
+}
+
+.empty {
+  margin: 0 1rem 0.75rem;
+  padding: 0.75rem 0.625rem;
+  border: 1px dashed var(--border);
+  border-radius: 0.375rem;
+  color: GrayText;
+  text-align: center;
+}
+
+.empty.error {
+  color: ActiveText;
+}
+
+@media (max-width: 40rem) {
+  body {
+    padding: 1rem;
+  }
+}

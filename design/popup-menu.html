@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Toolbar popup - Site Search prototype</title>
+    <link rel="stylesheet" href="./popup-menu.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <h1>Toolbar popup</h1>
+      <p>Five states of a compact popup. Width is 20rem (320px).</p>
+    </header>
+
+    <main class="variants">
+      <section class="variant">
+        <h2>Clipboard text</h2>
+        <div class="popup">
+          <p class="label">Search with clipboard contents</p>
+          <p class="preview">“The quick brown fox jumps over the lazy dog.”</p>
+
+          <ul class="menu">
+            <li><button type="button">Google</button></li>
+            <li><button type="button">Wikipedia</button></li>
+            <li><button type="button">GitHub</button></li>
+          </ul>
+
+          <hr />
+          <div class="menu-footer">
+            <button type="button">Settings</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="variant">
+        <h2>Empty clipboard</h2>
+        <div class="popup">
+          <p class="label">Search with clipboard contents</p>
+          <p class="empty">The clipboard has no text.</p>
+
+          <hr />
+          <div class="menu-footer">
+            <button type="button">Settings</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="variant">
+        <h2>Read failed</h2>
+        <div class="popup">
+          <p class="label">Search with clipboard contents</p>
+          <p class="empty error">Couldn't read the clipboard.</p>
+
+          <hr />
+          <div class="menu-footer">
+            <button type="button">Settings</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="variant">
+        <h2>Permission off</h2>
+        <div class="popup">
+          <p class="label">Search with clipboard contents</p>
+          <p class="empty">Clipboard search is off. Enable it in settings.</p>
+
+          <hr />
+          <div class="menu-footer">
+            <button type="button">Settings</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="variant">
+        <h2>No sites registered</h2>
+        <div class="popup">
+          <p class="label">Search with clipboard contents</p>
+          <p class="empty">No search sites yet.</p>
+
+          <hr />
+          <div class="menu-footer">
+            <button type="button">Settings</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
