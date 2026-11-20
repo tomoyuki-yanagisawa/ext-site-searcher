@@ -1,6 +1,7 @@
 {
   "extensionDescription": { "message": "Search selected or copied text on your favorite sites" },
-  "menuSearch": { "message": "Search on site" },
+  "menuSearchSelection": { "message": "Search selected text on site: \"%s\"" },
+  "menuSearchLink": { "message": "Search link text on site" },
   "menuSettings": { "message": "Configure search sites…" },
   "actionTitle": { "message": "Site Search" },
   "popupSearchLabel": { "message": "Search with clipboard contents" },

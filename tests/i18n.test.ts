@@ -28,8 +28,12 @@ describe('extension translations', () => {
   });
 
   it('defines the manifest and dynamic UI messages', () => {
-    for (const key of ['extensionDescription', 'menuSearch', 'menuSettings', 'actionTitle', 'saved', 'saveFailed', 'loadFailed', 'rowError', 'popupEmpty', 'popupReadFailed', 'popupNoSites']) {
+    for (const key of ['extensionDescription', 'menuSearchSelection', 'menuSearchLink', 'menuSettings', 'actionTitle', 'saved', 'saveFailed', 'loadFailed', 'rowError', 'popupEmpty', 'popupReadFailed', 'popupNoSites']) {
       expect(en).toHaveProperty(key);
     }
+    expect(en.menuSearchSelection.message).toContain('%s');
+    expect(ja.menuSearchSelection.message).toContain('%s');
+    expect(en.menuSearchLink.message).not.toContain('%s');
+    expect(ja.menuSearchLink.message).not.toContain('%s');
   });
 });
