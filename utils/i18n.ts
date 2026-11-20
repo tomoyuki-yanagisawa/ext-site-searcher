@@ -16,20 +16,18 @@ export function localize(root: ParentNode = document): void {
     document.documentElement.lang = language.startsWith('ja') ? 'ja' : 'en';
   }
 
-  for (const element of root.querySelectorAll<HTMLElement>('[data-i18n]')) {
-    const key = element.dataset.i18n as MessageKey | undefined;
-    if (key) {
-      const text = getMessage(key);
+  for (const element of root.querySelectorAll<HTMLElement>('[data-i18n], [data-i18n-label]')) {
+    const textKey = element.dataset.i18n as MessageKey | undefined;
+    if (textKey) {
+      const text = getMessage(textKey);
       if (text) {
         element.textContent = text;
       }
     }
-  }
 
-  for (const element of root.querySelectorAll<HTMLElement>('[data-i18n-label]')) {
-    const key = element.dataset.i18nLabel as MessageKey | undefined;
-    if (key) {
-      const label = getMessage(key);
+    const labelKey = element.dataset.i18nLabel as MessageKey | undefined;
+    if (labelKey) {
+      const label = getMessage(labelKey);
       if (label) {
         element.setAttribute('aria-label', label);
       }
