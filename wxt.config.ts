@@ -20,13 +20,6 @@ export default defineConfig({
     permissions: ['contextMenus', 'storage', 'clipboardWrite', 'clipboardRead'],
     action: {
       default_title: '__MSG_actionTitle__',
-      default_icon: {
-        16: 'icons/16.png',
-        32: 'icons/32.png',
-        48: 'icons/48.png',
-        96: 'icons/96.png',
-        128: 'icons/128.png',
-      },
     },
     ...(browser === 'chrome' && {
       minimum_chrome_version: '157',
