@@ -6,7 +6,14 @@ export function searchUrl(template: string, query: string): string {
   return template.split(QUERY_PLACEHOLDER).join(encodeURIComponent(query));
 }
 
-export function validateSite(site: Site): 'nameRequired' | 'urlRequired' | 'queryRequired' | 'urlProtocol' | 'urlInvalid' | null {
+export type SiteValidationError =
+  | 'nameRequired'
+  | 'urlRequired'
+  | 'queryRequired'
+  | 'urlProtocol'
+  | 'urlInvalid';
+
+export function validateSite(site: Site): SiteValidationError | null {
   const name = site.name.trim();
   const url = site.url.trim();
   if (!name) return 'nameRequired';
