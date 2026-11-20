@@ -14,17 +14,27 @@ const MENU_OPTIONS_SUFFIX = '-options';
 const SITE_MENU_PREFIX = 'site-index-';
 const SITE_MENU_PATTERN = /^site-index-(selection|link)-(\d+)$/;
 
+const MENU_TITLES = {
+  selection: 'menuSearchSelection',
+  link: 'menuSearchLink',
+} as const;
+
 type MenuItem = Browser.contextMenus.CreateProperties;
-type MenuContext = 'selection' | 'link';
+type MenuContext = keyof typeof MENU_TITLES;
+type FirefoxClickInfo = Browser.contextMenus.OnClickData & {
+  /** Firefox のみ */
+  linkText?: string;
+  /** Firefox のみ */
+  button?: number;
+};
 
 let menuUpdateQueue: Promise<void> = Promise.resolve();
 
 function parseSiteMenuId(menuId: string | number): { context: MenuContext; index: number } | undefined {
   if (typeof menuId !== 'string') return;
   const match = SITE_MENU_PATTERN.exec(menuId);
-  const indexText = match?.[2];
-  if (!match || indexText === undefined) return;
-  return { context: match[1] === 'link' ? 'link' : 'selection', index: Number(indexText) };
+  if (!match) return;
+  return { context: match[1] === 'link' ? 'link' : 'selection', index: Number(match[2]) };
 }
 
 function isOptionsMenuId(menuId: string | number): boolean {
@@ -51,17 +61,13 @@ function createMenuItem(item: MenuItem): Promise<void> {
 /**
  * `selection` のタイトルは `%s` を含み、選択文字列がブラウザ側で埋め込まれる。
  */
-async function createSiteMenu(
-  context: MenuContext,
-  titleKey: 'menuSearchSelection' | 'menuSearchLink',
-  sites: Site[],
-): Promise<void> {
+async function createSiteMenu(context: MenuContext, sites: Site[]): Promise<void> {
   const rootId = `${MENU_ROOT_PREFIX}${context}`;
   const contexts: MenuItem['contexts'] = [context];
 
   await createMenuItem({
     id: rootId,
-    title: getMessage(titleKey),
+    title: getMessage(MENU_TITLES[context]),
     contexts,
   });
 
@@ -95,10 +101,10 @@ async function rebuildMenus(): Promise<void> {
   const { sites } = await getSettings();
 
   await browser.contextMenus.removeAll();
-  await createSiteMenu('selection', 'menuSearchSelection', sites);
+  await createSiteMenu('selection', sites);
 
   if (supportsLinkText) {
-    await createSiteMenu('link', 'menuSearchLink', sites);
+    await createSiteMenu('link', sites);
   }
 }
 
@@ -132,8 +138,8 @@ export default defineBackground(() => {
 
     const { sites, openIn, copyQuery } = await getSettings();
     const site = sites[target.index];
-    const linkText = supportsLinkText && 'linkText' in info && typeof info.linkText === 'string' ? info.linkText : undefined;
-    const query = target.context === 'link' ? linkText : info.selectionText;
+    const firefoxInfo = info as FirefoxClickInfo;
+    const query = target.context === 'link' ? firefoxInfo.linkText : info.selectionText;
     if (!site || !query) {
       return;
     }
@@ -148,7 +154,7 @@ export default defineBackground(() => {
       }
     }
 
-    const middleClick = supportsMenuClickButton && 'button' in info && info.button === 1;
+    const middleClick = supportsMenuClickButton && firefoxInfo.button === 1;
     await openSearch(url, openIn, middleClick, tab);
   });
 });

@@ -1,13 +1,15 @@
 const MAX_QUERY_LENGTH = 2000;
 const PREVIEW_LENGTH = 160;
 
+function truncate(text: string, maxLength: number, ellipsis = ''): string {
+  const chars = [...text];
+  return chars.length > maxLength ? `${chars.slice(0, maxLength).join('')}${ellipsis}` : text;
+}
+
 export function normalizeClipboardText(text: string): string {
-  const normalized = text.replace(/\s+/g, ' ').trim();
-  const chars = [...normalized];
-  return chars.length > MAX_QUERY_LENGTH ? chars.slice(0, MAX_QUERY_LENGTH).join('') : normalized;
+  return truncate(text.replace(/\s+/g, ' ').trim(), MAX_QUERY_LENGTH);
 }
 
 export function previewClipboardText(text: string): string {
-  const chars = [...text];
-  return chars.length > PREVIEW_LENGTH ? `${chars.slice(0, PREVIEW_LENGTH).join('')}…` : text;
+  return truncate(text, PREVIEW_LENGTH, '…');
 }
