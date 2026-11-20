@@ -62,9 +62,15 @@ describe('background menus', () => {
     vi.doUnmock('wxt/browser');
   });
 
-  function menuId(name: string): string {
-    const menu = menus.find((item) => item.title === name);
-    if (!menu) throw new Error(`Missing menu ${name}`);
+  function menuId(title: string): string {
+    const menu = menus.find((item) => item.title === title);
+    if (!menu) throw new Error(`Missing menu ${title}`);
+    return menu.id;
+  }
+
+  function siteMenuId(name: string, context: 'selection' | 'link'): string {
+    const menu = menus.find((item) => item.title === name && item.id.startsWith(`site-index-${context}-`));
+    if (!menu) throw new Error(`Missing ${context} site menu ${name}`);
     return menu.id;
   }
 
@@ -76,41 +82,40 @@ describe('background menus', () => {
     await startup();
   }
 
-  it('uses translated messages for built-in menu titles', () => {
-    expect(menuId('menuSearch')).toBe('site-search');
-    expect(menuId('menuSettings')).toBe('site-search-options');
+  it('registers a menu for each context with translated titles', () => {
+    expect(menuId('menuSearchSelection')).toBe('site-search-selection');
+    expect(menuId('menuSearchLink')).toBe('site-search-link');
+    expect(menuId('menuSettings')).toBe('site-search-selection-options');
+  });
+
+  it('registers only the selection menu in Chrome', async () => {
+    await startBrowser('chrome');
+    expect(menus.some((menu) => menu.id === 'site-search-link')).toBe(false);
+    expect(menus.every((menu) => menu.contexts?.length === 1 && menu.contexts[0] === 'selection')).toBe(true);
   });
 
   it('creates distinct menu IDs for duplicate sites', async () => {
     sites = [google, google];
     await startup();
     const ids = menus.filter((menu) => menu.title === 'Google').map((menu) => menu.id);
-    expect(ids).toHaveLength(2);
-    expect(new Set(ids).size).toBe(2);
+    expect(ids).toHaveLength(4);
+    expect(new Set(ids).size).toBe(4);
   });
 
-  it('supports Firefox link text and copies the search query', async () => {
-    expect(menus.every((menu) => menu.contexts?.includes('link'))).toBe(true);
+  it('searches with the link text from the link menu and copies it', async () => {
     copyQuery = true;
-    await click({ menuItemId: menuId('Google'), linkText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });
+    await click({ menuItemId: siteMenuId('Google', 'link'), linkText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });
     expect(createTab).toHaveBeenCalledWith({ url: 'https://google.com/search?q=%E7%8C%AB%20%26%20%E7%8A%AC', index: 3, windowId: 8 });
     expect(writeText).toHaveBeenCalledWith('猫 & 犬');
   });
 
-  it('prefers selected text over link text', async () => {
-    await click({ menuItemId: menuId('Google'), selectionText: 'selected', linkText: 'link' });
+  it('searches with the selected text from the selection menu', async () => {
+    await click({ menuItemId: siteMenuId('Google', 'selection'), selectionText: 'selected', linkText: 'link' });
     expect(createTab).toHaveBeenCalledWith(expect.objectContaining({ url: 'https://google.com/search?q=selected' }));
   });
 
-  it('ignores link text in Chrome', async () => {
-    await startBrowser('chrome');
-    expect(menus.every((menu) => !menu.contexts?.includes('link'))).toBe(true);
-    await click({ menuItemId: menuId('Google'), linkText: 'link' });
-    expect(createTab).not.toHaveBeenCalled();
-  });
-
   it('opens the selected site to the right in the source window', async () => {
-    await click({ menuItemId: menuId('Google'), selectionText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });
+    await click({ menuItemId: siteMenuId('Google', 'selection'), selectionText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });
     expect(createTab).toHaveBeenCalledWith({ url: 'https://google.com/search?q=%E7%8C%AB%20%26%20%E7%8A%AC', index: 3, windowId: 8 });
     expect(updateTab).not.toHaveBeenCalled();
     expect(writeText).not.toHaveBeenCalled();
@@ -118,7 +123,7 @@ describe('background menus', () => {
 
   it('copies the original text when enabled', async () => {
     copyQuery = true;
-    await click({ menuItemId: menuId('Google'), selectionText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });
+    await click({ menuItemId: siteMenuId('Google', 'selection'), selectionText: '猫 & 犬' }, { id: 5, index: 2, windowId: 8 });
     expect(writeText).toHaveBeenCalledWith('猫 & 犬');
     expect(createTab).toHaveBeenCalledOnce();
   });
@@ -128,7 +133,7 @@ describe('background menus', () => {
     writeText.mockRejectedValue(new Error('clipboard unavailable'));
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
-      await click({ menuItemId: menuId('Google'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
+      await click({ menuItemId: siteMenuId('Google', 'selection'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
       expect(createTab).toHaveBeenCalledWith({ url: 'https://google.com/search?q=test', index: 3, windowId: 8 });
       expect(log).toHaveBeenCalled();
     } finally {
@@ -138,7 +143,7 @@ describe('background menus', () => {
 
   it('opens in the current tab when configured', async () => {
     openIn = 'currentTab';
-    await click({ menuItemId: menuId('Other'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
+    await click({ menuItemId: siteMenuId('Other', 'selection'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
     expect(updateTab).toHaveBeenCalledWith(5, { url: 'https://example.com/?q=test' });
     expect(createTab).not.toHaveBeenCalled();
   });
@@ -146,14 +151,14 @@ describe('background menus', () => {
   it.each(['firefox', 'chrome'])('opens in a background tab when configured (%s)', async (browserName) => {
     await startBrowser(browserName);
     openIn = 'backgroundTab';
-    await click({ menuItemId: menuId('Other'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
+    await click({ menuItemId: siteMenuId('Other', 'selection'), selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
     expect(createTab).toHaveBeenCalledWith({ url: 'https://example.com/?q=test', index: 3, windowId: 8, active: false });
     expect(updateTab).not.toHaveBeenCalled();
   });
 
   it('opens Firefox middle clicks in a background tab regardless of the setting', async () => {
     openIn = 'currentTab';
-    await click({ menuItemId: menuId('Other'), selectionText: 'test', button: 1 }, { id: 5, index: 2, windowId: 8 });
+    await click({ menuItemId: siteMenuId('Other', 'selection'), selectionText: 'test', button: 1 }, { id: 5, index: 2, windowId: 8 });
     expect(createTab).toHaveBeenCalledWith({ url: 'https://example.com/?q=test', index: 3, windowId: 8, active: false });
     expect(updateTab).not.toHaveBeenCalled();
   });
@@ -161,33 +166,36 @@ describe('background menus', () => {
   it('does not apply the Firefox shortcut in Chrome', async () => {
     await startBrowser('chrome');
     openIn = 'currentTab';
-    await click({ menuItemId: menuId('Other'), selectionText: 'test', button: 1 }, { id: 5, index: 2, windowId: 8 });
+    await click({ menuItemId: siteMenuId('Other', 'selection'), selectionText: 'test', button: 1 }, { id: 5, index: 2, windowId: 8 });
     expect(updateTab).toHaveBeenCalledWith(5, { url: 'https://example.com/?q=test' });
     expect(createTab).not.toHaveBeenCalled();
   });
 
   it('falls back to creating a tab when the source tab has no ID', async () => {
     openIn = 'currentTab';
-    await click({ menuItemId: menuId('Google'), selectionText: 'test' }, { index: 2, windowId: 8 });
+    await click({ menuItemId: siteMenuId('Google', 'selection'), selectionText: 'test' }, { index: 2, windowId: 8 });
     expect(createTab).toHaveBeenCalledWith({ url: 'https://google.com/search?q=test', index: 3, windowId: 8 });
     expect(updateTab).not.toHaveBeenCalled();
   });
 
   it('opens options and ignores invalid clicks', async () => {
-    await click({ menuItemId: 'site-search-options' });
+    await click({ menuItemId: 'site-search-selection-options' });
+    await click({ menuItemId: 'site-search-link-options' });
     await click({ menuItemId: 'site-index-0-%broken', selectionText: 'test' });
-    await click({ menuItemId: menuId('Google') });
-    expect(openOptions).toHaveBeenCalledOnce();
+    await click({ menuItemId: siteMenuId('Google', 'selection') });
+    expect(openOptions).toHaveBeenCalledTimes(2);
     expect(createTab).not.toHaveBeenCalled();
   });
 
-  it('creates site menus in settings order', () => {
-    const ids = menus.filter((menu) => menu.id.startsWith('site-index-')).map((menu) => menu.id);
-    expect(ids).toEqual(['site-index-0', 'site-index-1']);
+  it('creates site menus in settings order for each context', () => {
+    const selectionIds = menus.filter((menu) => menu.id.startsWith('site-index-selection-')).map((menu) => menu.id);
+    const linkIds = menus.filter((menu) => menu.id.startsWith('site-index-link-')).map((menu) => menu.id);
+    expect(selectionIds).toEqual(['site-index-selection-0', 'site-index-selection-1']);
+    expect(linkIds).toEqual(['site-index-link-0', 'site-index-link-1']);
   });
 
   it('opens the site at the clicked index from the current settings', async () => {
-    const googleId = menuId('Google');
+    const googleId = siteMenuId('Google', 'selection');
     sites = [other, google];
     changed({ sites: {} }, 'local');
     await click({ menuItemId: googleId, selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });
@@ -198,13 +206,13 @@ describe('background menus', () => {
   it('uses the edited URL for the clicked index', async () => {
     sites = [{ ...google, url: 'https://example.com/?q={query}' }, other];
     changed({ sites: {} }, 'local');
-    await click({ menuItemId: menuId('Google'), selectionText: 'test' });
+    await click({ menuItemId: siteMenuId('Google', 'selection'), selectionText: 'test' });
     expect(createTab).toHaveBeenCalledWith(expect.objectContaining({ url: 'https://example.com/?q=test' }));
     await startup();
   });
 
   it('ignores a site index that no longer exists', async () => {
-    const index = menuId('Other');
+    const index = siteMenuId('Other', 'selection');
     sites = [google];
     changed({ sites: {} }, 'local');
     await click({ menuItemId: index, selectionText: 'test' }, { id: 5, index: 2, windowId: 8 });

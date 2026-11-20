@@ -1,6 +1,7 @@
 {
   "extensionDescription": { "message": "選択した文字列やクリップボードの文字列を登録したサイトで検索" },
-  "menuSearch": { "message": "サイトで検索" },
+  "menuSearchSelection": { "message": "選択文字をサイトで検索: \"%s\"" },
+  "menuSearchLink": { "message": "リンク文字をサイトで検索" },
   "menuSettings": { "message": "検索サイトを設定…" },
   "actionTitle": { "message": "Site Search" },
   "popupSearchLabel": { "message": "クリップボードの内容で検索" },

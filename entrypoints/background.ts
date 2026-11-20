@@ -1,25 +1,34 @@
 import { browser, type Browser } from 'wxt/browser';
-import { getSettings } from '../utils/settings';
+import { getSettings, type Site } from '../utils/settings';
 import { searchUrl } from '../utils/search-url';
 import { getMessage } from '../utils/i18n';
 import { openSearch } from '../utils/open-search';
 
-// ビルド対象ブラウザに基づく機能対応。Firefox のみが対象。
+// ビルド対象ブラウザに基づく機能対応。ブラウザ名ではなく、提供される機能で分岐する。
+// いずれも Firefox のみが提供する。
 const supportsLinkText = import.meta.env.BROWSER === 'firefox';
 const supportsMenuClickButton = import.meta.env.BROWSER === 'firefox';
 
-const MENU_ROOT_ID = 'site-search';
-const MENU_OPTIONS_ID = 'site-search-options';
+const MENU_ROOT_PREFIX = 'site-search-';
+const MENU_OPTIONS_SUFFIX = '-options';
 const SITE_MENU_PREFIX = 'site-index-';
+const SITE_MENU_PATTERN = /^site-index-(selection|link)-(\d+)$/;
 
 type MenuItem = Browser.contextMenus.CreateProperties;
+type MenuContext = 'selection' | 'link';
 
 let menuUpdateQueue: Promise<void> = Promise.resolve();
 
-function siteIndex(menuId: string | number): number | undefined {
-  if (typeof menuId !== 'string' || !menuId.startsWith(SITE_MENU_PREFIX)) return;
-  const value = menuId.slice(SITE_MENU_PREFIX.length);
-  return /^\d+$/.test(value) ? Number(value) : undefined;
+function parseSiteMenuId(menuId: string | number): { context: MenuContext; index: number } | undefined {
+  if (typeof menuId !== 'string') return;
+  const match = SITE_MENU_PATTERN.exec(menuId);
+  const indexText = match?.[2];
+  if (!match || indexText === undefined) return;
+  return { context: match[1] === 'link' ? 'link' : 'selection', index: Number(indexText) };
+}
+
+function isOptionsMenuId(menuId: string | number): boolean {
+  return typeof menuId === 'string' && menuId.endsWith(MENU_OPTIONS_SUFFIX);
 }
 
 /**
@@ -39,21 +48,27 @@ function createMenuItem(item: MenuItem): Promise<void> {
   });
 }
 
-async function rebuildMenus(): Promise<void> {
-  const { sites } = await getSettings();
-  const contexts: MenuItem['contexts'] = supportsLinkText ? ['selection', 'link'] : ['selection'];
+/**
+ * `selection` のタイトルは `%s` を含み、選択文字列がブラウザ側で埋め込まれる。
+ */
+async function createSiteMenu(
+  context: MenuContext,
+  titleKey: 'menuSearchSelection' | 'menuSearchLink',
+  sites: Site[],
+): Promise<void> {
+  const rootId = `${MENU_ROOT_PREFIX}${context}`;
+  const contexts: MenuItem['contexts'] = [context];
 
-  await browser.contextMenus.removeAll();
   await createMenuItem({
-    id: MENU_ROOT_ID,
-    title: getMessage('menuSearch'),
+    id: rootId,
+    title: getMessage(titleKey),
     contexts,
   });
 
   for (const [index, site] of sites.entries()) {
     await createMenuItem({
-      id: `${SITE_MENU_PREFIX}${index}`,
-      parentId: MENU_ROOT_ID,
+      id: `${SITE_MENU_PREFIX}${context}-${index}`,
+      parentId: rootId,
       title: site.name,
       contexts,
     });
@@ -61,19 +76,30 @@ async function rebuildMenus(): Promise<void> {
 
   if (sites.length > 0) {
     await createMenuItem({
-      id: `${MENU_ROOT_ID}-separator`,
-      parentId: MENU_ROOT_ID,
+      id: `${rootId}-separator`,
+      parentId: rootId,
       type: 'separator',
       contexts,
     });
   }
 
   await createMenuItem({
-    id: MENU_OPTIONS_ID,
-    parentId: MENU_ROOT_ID,
+    id: `${rootId}${MENU_OPTIONS_SUFFIX}`,
+    parentId: rootId,
     title: getMessage('menuSettings'),
     contexts,
   });
+}
+
+async function rebuildMenus(): Promise<void> {
+  const { sites } = await getSettings();
+
+  await browser.contextMenus.removeAll();
+  await createSiteMenu('selection', 'menuSearchSelection', sites);
+
+  if (supportsLinkText) {
+    await createSiteMenu('link', 'menuSearchLink', sites);
+  }
 }
 
 function enqueueMenuUpdate(): Promise<void> {
@@ -94,20 +120,20 @@ export default defineBackground(() => {
   });
 
   browser.contextMenus.onClicked.addListener(async (info, tab) => {
-    if (info.menuItemId === MENU_OPTIONS_ID) {
+    if (isOptionsMenuId(info.menuItemId)) {
       await browser.runtime.openOptionsPage();
       return;
     }
 
-    if (typeof info.menuItemId !== 'string' || !info.menuItemId.startsWith(SITE_MENU_PREFIX)) {
+    const target = parseSiteMenuId(info.menuItemId);
+    if (!target) {
       return;
     }
 
     const { sites, openIn, copyQuery } = await getSettings();
-    const index = siteIndex(info.menuItemId);
-    const site = index === undefined ? undefined : sites[index];
+    const site = sites[target.index];
     const linkText = supportsLinkText && 'linkText' in info && typeof info.linkText === 'string' ? info.linkText : undefined;
-    const query = info.selectionText || linkText;
+    const query = target.context === 'link' ? linkText : info.selectionText;
     if (!site || !query) {
       return;
     }
