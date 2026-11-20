@@ -115,14 +115,12 @@ settingsButton.addEventListener('click', async () => {
   window.close();
 });
 
-retryButton.addEventListener('click', () => {
+function runInitialize(): void {
   initialize().catch((error: unknown) => {
     console.error('Failed to initialize popup', error);
     showEmpty('popupReadFailed');
   });
-});
+}
 
-initialize().catch((error: unknown) => {
-  console.error('Failed to initialize popup', error);
-  showEmpty('popupReadFailed');
-});
+retryButton.addEventListener('click', runInitialize);
+runInitialize();

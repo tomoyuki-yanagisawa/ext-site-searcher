@@ -8,7 +8,7 @@ export async function openSearch(
   tab?: Browser.tabs.Tab,
 ): Promise<void> {
   const background = openIn === 'backgroundTab' || middleClick;
-  if (!background && openIn === 'currentTab' && tab?.id !== undefined) {
+  if (openIn === 'currentTab' && !middleClick && tab?.id !== undefined) {
     await browser.tabs.update(tab.id, { url });
   } else {
     await browser.tabs.create({
